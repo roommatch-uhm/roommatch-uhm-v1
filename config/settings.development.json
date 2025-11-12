@@ -1,0 +1,37 @@
+{
+  "defaultAccounts": [
+    {
+      "id": 1,
+      "firstName": "Bob",
+      "lastName": "The-Builder",
+      "UHemail": "admin@foo.com",
+      "password": "changeme1",
+      "role": "ADMIN",
+      "preferences": "Prefers a clean, quiet environment. Non-smoker.",
+      "roommateStatus": "Looking",
+      "budget": 1000.00
+    },
+    {
+      "id": 2,
+      "firstName": "John",
+      "lastName": "Doe",
+      "UHemail": "john@foo.com",
+      "password": "changeme2",
+      "role": "USER",
+      "preferences": "Looking for a roommate who enjoys social activities and is easy-going.",
+      "roommateStatus": "Looking",
+      "budget": 800.00
+    },
+    {
+      "id": 3,
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "UHemail": "jane@foo.com",
+      "password": "changeme3",
+      "role": "USER",
+      "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",
+      "roommateStatus": "Has Roommate",
+      "budget": 900.00
+    }
+  ]
+}
