@@ -1,14 +1,190 @@
-html,
-body {
-  --bs-light-rgb: 236, 236, 236;
-  box-sizing: border-box;
-  height: 100%;
-  padding: 0;
-  margin: 0;
+
+:root {
+  --uh-green: #024731;
+  --uh-green-light: #037f4c;
+  --uh-green-bg: #f5f9f6;
+  --uh-gray: #6c757d;
+  --uh-light: #f1f1f1;
+  --uh-accent: #bfe8d1;
 }
-.wrapper {
-  box-sizing: border-box;
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
+body {
+  background-color: var(--uh-green-bg);
+  font-family: "Inter", sans-serif;
+  color: #000;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+/* Navbar Styles */
+.navbar {
+  background-color: #ffffff !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.navbar-brand {
+  color: var(--uh-green) !important;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.navbar .nav-link {
+  color: #333 !important;
+  font-weight: 500;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.navbar .nav-link:hover {
+  color: var(--uh-green) !important;
+}
+.navbar .nav-link.active-link {
+  color: var(--uh-green) !important;
+}
+
+.navbar .nav-link.active-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--uh-green);
+  border-radius: 2px;
+}
+
+.btn-profile {
+  all: unset; /* removes Bootstrap defaults completely */
+  display: inline-block;
+  background-color: var(--uh-green) !important;
+  color: #fff !important;
+  border: 2px solid var(--uh-green) !important;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+}
+
+.btn-profile:hover {
+  background-color: #fff !important;
+  color: var(--uh-green) !important;
+  border: 2px solid var(--uh-green) !important;
+  transform: scale(1.05);
+}
+
+.btn-profile:focus,
+.btn-profile:active {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 71, 49, 0.3);
+}
+
+/* Meetings Page Styles */
+
+.meetings-page {
+  background-color: #f6f6f6;
+}
+
+.page-title {
+  color: #000;
+  letter-spacing: 0.5px;
+}
+
+.page-subtitle {
+  font-size: 1rem;
+  color: var(--uh-gray);
+}
+
+.calendar-wrapper {
+  width: 80%;
+  max-width: 1000px;
+}
+
+.react-calendar {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  font-family: "Inter", sans-serif;
+}
+
+.meeting-day {
+  background-color: var(--uh-green) !important;
+  color: white !important;
+  border-radius: 8px;
+}
+
+.react-calendar__tile--active {
+  background: var(--uh-green-light) !important;
+  color: #fff !important;
+}
+
+.react-calendar__tile--now {
+  background: #eaeaea !important;
+  color: #000 !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-uh-green {
+  background-color: var(--uh-green);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 0.6rem 1.6rem;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-uh-green:hover {
+  background-color: var(--uh-green-light);
+  transform: scale(1.03);
+}
+
+.btn-outline-dark:hover {
+  background-color: #444;
+  color: #fff !important;
+}
+
+/* Footer Styles */
+footer,
+.uh-footer {
+  background-color: var(--uh-green);
+  color: var(--uh-light);
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+}
+
+footer a,
+.uh-footer a {
+  color: var(--uh-light);
+  transition: color 0.2s ease;
+}
+
+footer a:hover,
+.uh-footer a:hover {
+  color: var(--uh-accent);
+  text-decoration: underline;
+}
+.bi {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.bi:hover {
+  transform: scale(1.1);
+  color: var(--uh-accent) !important;
+}
+
+.text-uh-green {
+  color: var(--uh-green) !important;
+}
+
+.text-muted {
+  color: var(--uh-gray) !important;
 }
