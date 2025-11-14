@@ -1,6 +1,6 @@
 'use server';
 
-import { Stuff, Condition } from '@prisma/client';
+import { Stuff, Condition, Profile } from '@prisma/client';
 import { hash } from 'bcrypt';
 import { redirect } from 'next/navigation';
 import { prisma } from './prisma';
@@ -29,6 +29,26 @@ export async function addStuff(stuff: { name: string; quantity: number; owner: s
   });
   // After adding, redirect to the list page
   redirect('/list');
+}
+
+export async function createProfile(profile: Profile) {
+  // console.log(`createProfile data: ${JSON.stringify(profile, null, 2)}`);
+  await prisma.profile.create({
+    data: {
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.email,
+      bio: profile.bio,
+      image: profile.image,
+      clean: profile.clean,
+      budget: profile.budget,
+      social: profile.social,
+      study: profile.study,
+      sleep: profile.sleep,
+    },
+  });
+  // After adding, redirect to the home page
+  redirect('/');
 }
 
 /**

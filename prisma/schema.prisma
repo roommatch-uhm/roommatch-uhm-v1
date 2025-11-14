@@ -36,6 +36,51 @@ enum Condition {
   poor
 }
 
+enum Clean {
+  excellent
+  good
+  fair
+  poor
+}
+
+enum Budget {
+  Low
+  Medium
+  High
+}
+
+enum Social {
+  Introvert
+  Ambivert
+  Extrovert
+  Unsure
+}
+
+enum Study {
+  Cramming
+  Regular
+  None
+}
+
+enum Sleep {
+  Early Bird
+  Night Owl
+  Flexible
+}
+
+model Profile {
+  firstName   String
+  lastName    String
+  email       String
+  bio         String
+  image       String
+  clean       Clean @default(good)
+  budget      Budget @default(Medium)
+  social      Social @default(Unsure)
+  study       Study @default(Regular)
+  sleep       Sleep @default(Flexible)
+}
+
 model Stuff {
   id        Int       @id @default(autoincrement())
   name      String
