@@ -71,7 +71,7 @@ enum Sleep {
 model Profile {
   firstName   String
   lastName    String
-  email       String
+  email       String @unique
   bio         String
   image       String
   clean       Clean @default(good)
