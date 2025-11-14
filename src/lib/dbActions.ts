@@ -35,16 +35,16 @@ export async function createProfile(profile: Profile) {
   // console.log(`createProfile data: ${JSON.stringify(profile, null, 2)}`);
   await prisma.profile.create({
     data: {
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      email: profile.email,
-      bio: profile.bio,
-      image: profile.image,
-      clean: profile.clean,
-      budget: profile.budget,
-      social: profile.social,
-      study: profile.study,
-      sleep: profile.sleep,
+      firstName: profile.firstName || '',
+      lastName: profile.lastName || '',
+      email: profile.email || '',
+      bio: profile.bio || '',
+      image: profile.image || '',
+      clean: profile.clean || '',
+      budget: profile.budget || '',
+      social: profile.social || '',
+      study: profile.study || '',
+      sleep: profile.sleep || '',
     },
   });
   // After adding, redirect to the home page
