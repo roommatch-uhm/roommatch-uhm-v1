@@ -21,13 +21,12 @@ export default function LandingPage() {
                 A safer and more efficient way for UH Mānoa students to find
                 housing and compatible roommates.
               </p>
-              <a
-                href="/auth/signin"
+              <button
                 className="btn btn-dark btn-lg px-5 py-3"
                 style={{ borderRadius: '8px', fontSize: '1.1rem' }}
               >
                 Get Started
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -139,7 +138,7 @@ export default function LandingPage() {
                   </p>
                   <div className="d-flex align-items-center">
                     <img
-                      src="/testimonial-1.jpg"
+                      src="/images/james-dion.jpg"
                       alt="James Dion"
                       className="rounded-circle me-3"
                       style={{
@@ -173,7 +172,7 @@ export default function LandingPage() {
                   </p>
                   <div className="d-flex align-items-center">
                     <img
-                      src="/testimonial-2.jpg"
+                      src="/images/deja-parker.jpg"
                       alt="Deja Parker"
                       className="rounded-circle me-3"
                       style={{
@@ -207,7 +206,7 @@ export default function LandingPage() {
                   </p>
                   <div className="d-flex align-items-center">
                     <img
-                      src="/testimonial-3.jpg"
+                      src="/images/sam-mai.jpg"
                       alt="Sam Mai"
                       className="rounded-circle me-3"
                       style={{
