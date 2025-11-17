@@ -1,41 +1,38 @@
 import { PrismaClient, Role } from '@prisma/client';
 import { hash } from 'bcrypt';
-import * as config from '../config/settings.development.json'; // Assuming your settings file exists
+import * as config from '../config/settings.development.json';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding the database');
+  console.log('Accounts to seed:', config.defaultAccounts);
 
-  // Hashing the password for all users
-  const password = await hash('changeme', 10);
+  // // Clear the User table (for development only)
+  // await prisma.user.deleteMany({});
 
-  // Upsert users (ensure async handling)
   const upsertUserPromises = config.defaultAccounts.map(async (account) => {
-    const role = account.role as Role || Role.USER;
+    const role = (account.role as Role) || Role.USER;
+    const hashedPassword = await hash(account.password || 'changeme', 10);
+
     console.log(`  Creating user: ${account.UHemail} with role: ${role}`);
 
-    // Upsert users: If the user exists, update; else, create
     await prisma.user.upsert({
-      where: { UHemail: account.UHemail }, // Match UHemail as it's the unique field
-      update: {}, // You can add fields to update if needed
+      where: { UHemail: account.UHemail },
+      update: {},
       create: {
-        UHemail: account.UHemail, // Make sure UHemail matches the field in the schema
-        firstName: account.firstName || '', // Default to empty string if undefined
-        lastName: account.lastName || '', // Default to empty string if undefined
-        password, // Use hashed password
+        UHemail: account.UHemail,
+        firstName: account.firstName || '',
+        lastName: account.lastName || '',
+        password: hashedPassword,
         role,
-        preferences: account.preferences || '', // Default to empty string if undefined
-        roommateStatus: account.roommateStatus || 'Looking', // Default to 'Looking' if undefined
-        budget: account.budget || 0, // Default to 0 if undefined
+        preferences: account.preferences || '',
+        roommateStatus: account.roommateStatus || 'Looking',
+        budget: account.budget ?? null,
       },
     });
   });
 
-  // Await all user upserts
   await Promise.all(upsertUserPromises);
-
-  // Optionally, you can also seed other entities like contacts, listings, etc.
 
   console.log('Seeding complete!');
 }

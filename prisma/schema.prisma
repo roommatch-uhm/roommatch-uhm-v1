@@ -32,33 +32,7 @@ model User {
   preferences     String?
   roommateStatus  String //Options can be "Looking", "Not Looking", "Has Roommate"
   budget          Float?
-  listings        Listing[]
-  ratings         Rating[]
   answers         Answer[] // Needed for matching algorithm
-}
-
-model Listing {
-  id              Int   @id @default(autoincrement())
-  title           String
-  description     String
-  location        String
-  budget          Float
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  ownerId         Int
-  owner           User    @relation(fields: [ownerId], references: [id])
-  ratings         Rating[]
-}
-
-model Rating {
-  id            Int      @id @default(autoincrement())
-  rating        Int      // Assuming a rating scale 1-5
-  comment       String?
-  createdAt     DateTime @default(now())
-  listingId     Int
-  userId        Int
-  listing       Listing  @relation(fields: [listingId], references: [id])
-  user          User     @relation(fields: [userId], references: [id])
 }
 
 // Model for storing questions
