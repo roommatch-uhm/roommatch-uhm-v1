@@ -43,3 +43,14 @@ model Stuff {
   condition Condition @default(good)
   owner     String
 }
+
+model Profile {
+  id            Int       @id @default(autoincrement())
+  name          String
+  description   String
+  clean         String
+  budget        Int
+  social        String
+  study         String 
+  sleep         String
+}
