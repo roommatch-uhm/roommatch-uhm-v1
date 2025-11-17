@@ -1,3 +1,7 @@
-[![ci-nextjs-application-template](https://github.com/ics-software-engineering/nextjs-application-template/actions/workflows/ci.yml/badge.svg)](https://github.com/ics-software-engineering/nextjs-application-template/actions/workflows/ci.yml)
+<img src="https://roommatch-uhm.vercel.app/_next/image?url=%2Fimages%2Flogo-option-1.png&w=640&q=75" width="200px">
 
-For details, please see http://ics-software-engineering.github.io/nextjs-application-template/.
+Deployed at https://roommatch-uhm.vercel.app/
+
+System to help UH Manoa students find their most compatable roommates!
+
+Create a profile, view your matches, and chat with each other.
