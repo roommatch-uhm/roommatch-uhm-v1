@@ -1,3 +1,3 @@
-[![ci-nextjs-application-template](https://github.com/ics-software-engineering/nextjs-application-template/actions/workflows/ci.yml/badge.svg)](https://github.com/ics-software-engineering/nextjs-application-template/actions/workflows/ci.yml)
+Deployed at https://roommatch-uhm.vercel.app/
 
-For details, please see http://ics-software-engineering.github.io/nextjs-application-template/.
+<img src="https://roommatch-uhm.vercel.app/_next/image?url=%2Fimages%2Flogo-option-1.png&w=640&q=75">;
