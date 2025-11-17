@@ -1,5 +1,9 @@
 {
-  "extends": ["next/core-web-vitals", "airbnb", "airbnb-typescript"],
+  "extends": [
+    "next/core-web-vitals",
+    "airbnb",
+    "airbnb-typescript"
+  ],
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module",
@@ -16,10 +20,26 @@
     "no-return-assign": "off",
     "object-curly-newline": "off",
     "prefer-arrow-callback": "off",
-    "import/no-extraneous-dependencies": ["error", { "devDependencies": ["**/*.test.ts", "**/*.spec.ts"] }],
+
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": [
+          "**/*.test.ts",
+          "**/*.spec.ts",
+          "**/*.test.tsx",
+          "**/*.spec.tsx"
+        ],
+        "optionalDependencies": false,
+        "peerDependencies": false,
+        "include": ["src/**/*.ts", "src/**/*.tsx"]
+      }
+    ],
+
     "react/function-component-definition": "off",
     "react/jsx-props-no-spreading": "off",
     "react/one-expression-per-line": "off",
     "react/react-in-jsx-scope": "off"
   }
 }
+
