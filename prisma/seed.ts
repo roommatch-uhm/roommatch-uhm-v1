@@ -1,42 +1,42 @@
-import { PrismaClient, Role, Condition } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import { hash } from 'bcrypt';
 import * as config from '../config/settings.development.json';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding the database');
-  const password = await hash('changeme', 10);
-  config.defaultAccounts.forEach(async (account) => {
-    const role = account.role as Role || Role.USER;
-    console.log(`  Creating user: ${account.email} with role: ${role}`);
+  console.log('Accounts to seed:', config.defaultAccounts);
+
+  // // Clear the User table (for development only)
+  // await prisma.user.deleteMany({});
+
+  const upsertUserPromises = config.defaultAccounts.map(async (account) => {
+    const role = (account.role as Role) || Role.USER;
+    const hashedPassword = await hash(account.password || 'changeme', 10);
+
+    console.log(`  Creating user: ${account.UHemail} with role: ${role}`);
+
     await prisma.user.upsert({
-      where: { email: account.email },
+      where: { UHemail: account.UHemail },
       update: {},
       create: {
-        email: account.email,
-        password,
+        UHemail: account.UHemail,
+        firstName: account.firstName || '',
+        lastName: account.lastName || '',
+        password: hashedPassword,
         role,
+        preferences: account.preferences || '',
+        roommateStatus: account.roommateStatus || 'Looking',
+        budget: account.budget ?? null,
       },
     });
-    // console.log(`  Created user: ${user.email} with role: ${user.role}`);
   });
-  for (const data of config.defaultData) {
-    const condition = data.condition as Condition || Condition.good;
-    console.log(`  Adding stuff: ${JSON.stringify(data)}`);
-    // eslint-disable-next-line no-await-in-loop
-    await prisma.stuff.upsert({
-      where: { id: config.defaultData.indexOf(data) + 1 },
-      update: {},
-      create: {
-        name: data.name,
-        quantity: data.quantity,
-        owner: data.owner,
-        condition,
-      },
-    });
-  }
+
+  await Promise.all(upsertUserPromises);
+
+  console.log('Seeding complete!');
 }
+
 main()
   .then(() => prisma.$disconnect())
   .catch(async (e) => {
