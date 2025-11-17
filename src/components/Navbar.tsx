@@ -43,8 +43,8 @@ export default function Navbar() {
             </li>
             <li className="nav-item">
               <Link
-                href="/view"
-                className={`nav-link ${isActive("/view") ? "active-link" : ""}`}
+                href="/list"
+                className={`nav-link ${isActive("/list") ? "active-link" : ""}`}
               >
                 View RoomMatches
               </Link>
