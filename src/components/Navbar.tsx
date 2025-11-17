@@ -1,72 +1,89 @@
-/* eslint-disable react/jsx-indent, @typescript-eslint/indent */
+"use client";
 
-'use client';
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 
-import { useSession } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
-import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
-import { BoxArrowRight, Lock, PersonFill, PersonPlusFill } from 'react-bootstrap-icons';
+export default function Navbar() {
+  const pathname = usePathname();
 
-const NavBar: React.FC = () => {
-  const { data: session } = useSession();
-  const currentUser = session?.user?.email;
-  const userWithRole = session?.user as { email: string; randomKey: string };
-  const role = userWithRole?.randomKey;
-  const pathName = usePathname();
+  const isActive = (path: string) => pathname === path;
+
   return (
-    <Navbar bg="light" expand="lg">
-      <Container>
-        <Navbar.Brand href="/">Next.js Application Template</Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto justify-content-start">
-            {currentUser
-              ? [
-                  <Nav.Link id="add-stuff-nav" href="/add" key="add" active={pathName === '/add'}>
-                    Add Stuff
-                  </Nav.Link>,
-                  <Nav.Link id="list-stuff-nav" href="/list" key="list" active={pathName === '/list'}>
-                    List Stuff
-                  </Nav.Link>,
-                ]
-              : ''}
-            {currentUser && role === 'ADMIN' ? (
-              <Nav.Link id="admin-stuff-nav" href="/admin" key="admin" active={pathName === '/admin'}>
-                Admin
-              </Nav.Link>
-            ) : (
-              ''
-            )}
-          </Nav>
-          <Nav>
-            {session ? (
-              <NavDropdown id="login-dropdown" title={currentUser}>
-                <NavDropdown.Item id="login-dropdown-sign-out" href="/api/auth/signout">
-                  <BoxArrowRight />
-                  Sign Out
-                </NavDropdown.Item>
-                <NavDropdown.Item id="login-dropdown-change-password" href="/auth/change-password">
-                  <Lock />
-                  Change Password
-                </NavDropdown.Item>
-              </NavDropdown>
-            ) : (
-              <NavDropdown id="login-dropdown" title="Login">
-                <NavDropdown.Item id="login-dropdown-sign-in" href="/auth/signin">
-                  <PersonFill />
-                  Sign in
-                </NavDropdown.Item>
-                <NavDropdown.Item id="login-dropdown-sign-up" href="/auth/signup">
-                  <PersonPlusFill />
-                  Sign up
-                </NavDropdown.Item>
-              </NavDropdown>
-            )}
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
-  );
-};
+    <nav className="navbar navbar-expand-lg shadow-sm py-3 px-4 bg-white">
+      <div className="container-fluid d-flex align-items-center justify-content-between ms-3">
+        <Link href="/" className="d-flex align-items-center text-decoration-none">
+          <Image
+            src="/images/logo-option-1.png"
+            alt="RoomMatch UHM Logo"
+            width={200}
+            height={75}
+            className="me-2"
+          />
+        </Link>
 
-export default NavBar;
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav ms-auto">
+            <li className="nav-item">
+              <Link
+                href="/"
+                className={`nav-link ${isActive("/") ? "active-link" : ""}`}
+              >
+                Home
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                href="/list"
+                className={`nav-link ${isActive("/list") ? "active-link" : ""}`}
+              >
+                View RoomMatches
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                href="/create"
+                className={`nav-link ${isActive("/create") ? "active-link" : ""}`}
+              >
+                Create a Profile
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                href="/messages"
+                className={`nav-link ${isActive("/messages") ? "active-link" : ""}`}
+              >
+                Messages
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                href="/meetings"
+                className={`nav-link ${isActive("/meetings") ? "active-link" : ""}`}
+              >
+                Meetings
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+              href="/profile"
+              className="btn-profile ms-3 px-3 py-2 fw-semibold shadow-sm"
+              >
+                My Profile
+                </Link>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  );
+}

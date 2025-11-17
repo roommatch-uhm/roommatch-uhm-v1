@@ -1,12 +1,13 @@
 import { getServerSession } from 'next-auth';
-import { Col, Container, Row, Table } from 'react-bootstrap';
+import { Col, Container, Row } from 'react-bootstrap';
+import { Profile } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import StuffItem from '@/components/UserItem';
 import { loggedInProtectedPage } from '@/lib/page-protection';
 import authOptions from '@/lib/authOptions';
+import ProfileCard from '@/components/Card';
 
-/** Render a list of stuff for the logged in user. */
-const ListPage = async () => {
+/** Render a list of matched profiles for the logged in user. */
+const ListMatches = async () => {
   // Protect the page, only logged in users can access it.
   const session = await getServerSession(authOptions);
   loggedInProtectedPage(
@@ -15,39 +16,27 @@ const ListPage = async () => {
       // eslint-disable-next-line @typescript-eslint/comma-dangle
     } | null,
   );
-  const owner = (session && session.user && session.user.email) || '';
-  const stuff = await prisma.stuff.findMany({
-    where: {
-      owner,
-    },
-  });
-  // console.log(stuff);
+
+  const profiles: Profile[] = await prisma.profile.findMany();
+
   return (
     <main>
       <Container id="list" fluid className="py-3">
         <Row>
           <Col>
-            <h1>Stuff</h1>
-            <Table striped bordered hover>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Quantity</th>
-                  <th>Condition</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stuff.map((item) => (
-                  <StuffItem key={item.id} {...item} />
-                ))}
-              </tbody>
-            </Table>
+            <h1>RoomMatches</h1>
           </Col>
+        </Row>
+        <Row className="gy-4">
+          {profiles.map((profile) => (
+            <Col key = {profile.id} md={4} lg={3}>
+              <ProfileCard profile={profile} />
+            </Col>
+          ))}
         </Row>
       </Container>
     </main>
   );
 };
 
-export default ListPage;
+export default ListMatches;
