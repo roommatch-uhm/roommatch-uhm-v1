@@ -10,11 +10,7 @@ export const AddStuffSchema = Yup.object({
 export const CreateProfileSchema = Yup.object({
   firstName: Yup.string().required('First Name is required'),
   lastName: Yup.string().required('Last Name is required'),
-  email: Yup.string()
-    .email('Invalid email address')
-    // Accept UH addresses that end with hawaii.edu or uh.edu (subdomains allowed), case-insensitive
-    .matches(/@([A-Za-z0-9-]+\.)*(hawaii|uh)\.edu$/i, 'Email must be a valid UH email')
-    .required('Email is required'),
+  roomStatus: Yup.string().oneOf(['seeking_a_room', 'seeking_a_roommate']).required('Please select your room status'),
   bio: Yup.string().max(500, 'Bio must be at most 500 characters').required('Bio is required'),
   image: Yup.string().url('Image must be a valid URL').nullable(),
   clean: Yup.string().oneOf(['excellent', 'good', 'fair', 'poor']).required('Please select a cleanliness level'),

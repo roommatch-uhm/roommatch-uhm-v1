@@ -14,7 +14,7 @@ import { CreateProfileSchema } from '@/lib/validationSchemas';
 const onSubmit = async (data: {
   firstName: string;
   lastName: string;
-  email: string;
+  roomStatus: string;
   bio: string;
   image?: string | null;
   clean: string;
@@ -25,7 +25,7 @@ const onSubmit = async (data: {
 }) => {
   // console.log(`onSubmit data: ${JSON.stringify(data, null, 2)}`);
   await createProfile(data);
-  swal('Success', 'Your Profile has been created', 'success', {
+  swal('Success', 'Your Profile has been saved', 'success', {
     timer: 2000,
   });
 };
@@ -87,17 +87,18 @@ const CreateProfile: React.FC = () => {
                     <Row>
                       <Col>
                         <Form.Group>
-                          <Form.Label>Email address (must be a valid UH email)</Form.Label>
+                          <Form.Label>Room Status</Form.Label>
                           {/* Use the session email as the canonical value. Make it readOnly so user input isn't
                               accidentally overridden by another input. If you want users to edit it, remove
                               readOnly and the defaultValue will be the session email. */}
-                          <input
-                            type="email"
-                            {...register('email')}
-                            defaultValue={currentUser || ''}
-                            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                          />
-                          <div className="invalid-feedback">{errors.email?.message}</div>
+                          <select
+                            {...register('roomStatus')}
+                            className={`form-control ${errors.roomStatus ? 'is-invalid' : ''}`}
+                            defaultValue="seeking"
+                          >
+                            <option value="seeking">Seeking Roommate</option>
+                            <option value="offering">Offering Room</option>
+                          </select>
                         </Form.Group>
                       </Col>
                     </Row>

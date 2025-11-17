@@ -31,13 +31,25 @@ export async function addStuff(stuff: { name: string; quantity: number; owner: s
   redirect('/list');
 }
 
-export async function createProfile(profile: Profile) {
+export async function createProfile(profile: {
+  firstName: string;
+  lastName: string;
+  roomStatus: string;
+  bio: string;
+  image?: string | null;
+  clean: string;
+  budget: string;
+  social: string;
+  study: string;
+  sleep: string;
+}
+) {
   // console.log(`createProfile data: ${JSON.stringify(profile, null, 2)}`);
   await prisma.profile.create({
     data: {
       firstName: profile.firstName || '',
       lastName: profile.lastName || '',
-      email: profile.email || '',
+      roomStatus: profile.roomStatus || '',
       bio: profile.bio || '',
       image: profile.image || '',
       clean: profile.clean || '',
@@ -48,7 +60,7 @@ export async function createProfile(profile: Profile) {
     },
   });
   // After adding, redirect to the home page
-  redirect('/');
+  redirect('/profile');
 }
 
 /**
