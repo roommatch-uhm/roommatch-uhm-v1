@@ -8,9 +8,7 @@ const ProfileCard = ({ profile }: { profile: Profile }) => (
   <Card className="h-100">
     <Card.Header>
       <Image src={profile.image} width={75} />
-      <Card.Title>
-        {profile.name}
-      </Card.Title>
+      <Card.Title>{profile.name}</Card.Title>
     </Card.Header>
     <Card.Body>
       <Card.Text>
@@ -24,6 +22,7 @@ const ProfileCard = ({ profile }: { profile: Profile }) => (
     </Card.Body>
     <Card.Footer>
       <Link href="/messages">Chat</Link>
+      <Link href={`edit/${profile.id}`}>Edit</Link>
     </Card.Footer>
   </Card>
 );
