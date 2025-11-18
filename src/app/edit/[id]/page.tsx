@@ -9,9 +9,7 @@ export default async function EditUserPage({ params }: { params: { id: string | 
   // Protect the page, only logged in users can access it.
   const session = await getServerSession(authOptions);
   loggedInProtectedPage(
-    session as {
-      user: { email: string; id: string; randomKey: string };
-    } | null,
+    session as any,
   );
   const id = Number(Array.isArray(params?.id) ? params?.id[0] : params?.id);
 

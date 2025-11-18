@@ -8,8 +8,8 @@ import authOptions from '@/lib/authOptions';
 const AdminPage = async () => {
   const session = await getServerSession(authOptions);
   adminProtectedPage(
-    session as {
-      user: { email: string; id: string; randomKey: string };
+    session as unknown as {
+      user: { email: string; id: string; role: any };
     } | null,
   );
   const users = await prisma.user.findMany({});
