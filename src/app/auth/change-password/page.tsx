@@ -16,7 +16,10 @@ type ChangePasswordForm = {
 };
 
 const ChangePassword = () => {
-  const { data: session, status } = useSession();
+  // Safely get session and status, even if useSession() is undefined
+  const sessionHook = useSession?.();
+  const session = sessionHook?.data;
+  const status = sessionHook?.status;
   const userId = (session?.user as any)?.id;
 
   const validationSchema = Yup.object().shape({
@@ -44,13 +47,12 @@ const ChangePassword = () => {
       swal('Error', 'User not found', 'error');
       return;
     }
-    // Optionally, you can verify oldpassword here by calling a backend API
     await changeUserPassword(userId, data.password);
     await swal('Password Changed', 'Your password has been changed', 'success', { timer: 2000 });
     reset();
   };
 
-  if (status === 'loading') {
+  if (status === 'loading' || typeof status === 'undefined') {
     return <LoadingSpinner />;
   }
 
