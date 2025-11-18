@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { Card, Col, Container, Button, Form, Row } from 'react-bootstrap';
-import { createUser } from '@/lib/dbActions';
+import { createUserProfile } from '@/lib/dbActions';
 
 type SignUpForm = {
   email: string;
@@ -38,9 +38,19 @@ const SignUp = () => {
 
   const onSubmit = async (data: SignUpForm) => {
     // console.log(JSON.stringify(data, null, 2));
-    await createUser(data);
-    // After creating, signIn with redirect to the add page
-    await signIn('credentials', { callbackUrl: '/add', ...data });
+    // Map SignUpForm to the shape expected by createUserProfile
+    await createUserProfile({
+      UHemail: data.email,
+      password: data.password,
+      // provide sensible defaults for required fields not collected on this form
+      budget: 0,
+      firstName: '',
+      lastName: '',
+      // optional: roommateStatus, role can be omitted or set here if desired
+      roommateStatus: 'Looking',
+    });
+    // After creating, signIn with redirect to the add page (only pass needed fields)
+    await signIn('credentials', { callbackUrl: '/add', email: data.email, password: data.password });
   };
 
   return (
