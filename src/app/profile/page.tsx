@@ -24,15 +24,19 @@ const ProfilePage = async () => {
       id: owner,
     },
   });
-  
+
   // console.log(profile);
   return (
     <main>
       <Container id="list" fluid className="py-3">
         <Row>
           <Col>
-            <h1>My Profile</h1>
-            <Card profile={profile} />
+            <Container
+              className="d-flex justify-content-center"
+              style={{ maxWidth: '1000px' }} 
+            >
+              <Card profile={profile} />
+            </Container>
           </Col>
         </Row>
       </Container>
