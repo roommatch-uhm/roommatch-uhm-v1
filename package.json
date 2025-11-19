@@ -8,7 +8,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "playwright-development": "npx playwright test"
+    "playwright-development": "npx playwright test",
+    "test": "jest --watch"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@playwright/test": "^1.48.2",
     "@types/bcrypt": "^5.0.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.5.4",
     "@types/react": "^18.3.26",
     "@types/react-dom": "^18.3.7",
@@ -43,9 +45,12 @@
     "eslint-config-airbnb-typescript": "^18.0.0",
     "eslint-config-next": "^16.0.3",
     "eslint-config-prettier": "^9.1.0",
+    "jest": "^30.2.0",
+    "playwright": "^1.56.1",
     "prettier": "^3.3.1",
     "prettier-eslint": "^16.3.0",
     "prisma": "^5.19.1",
+    "ts-jest": "^29.4.5",
     "typescript": "^5.4.5"
   }
 }

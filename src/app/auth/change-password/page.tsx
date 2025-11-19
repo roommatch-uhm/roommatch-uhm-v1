@@ -6,20 +6,22 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import swal from 'sweetalert';
 import { Card, Col, Container, Button, Form, Row } from 'react-bootstrap';
-import { changePassword } from '@/lib/dbActions';
+import { changeUserPassword } from '@/lib/dbActions';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 type ChangePasswordForm = {
   oldpassword: string;
   password: string;
   confirmPassword: string;
-  // acceptTerms: boolean;
 };
 
-/** The change password page. */
 const ChangePassword = () => {
-  const { data: session, status } = useSession();
-  const email = session?.user?.email || '';
+  // Safely get session and status, even if useSession() is undefined
+  const sessionHook = useSession?.();
+  const session = sessionHook?.data;
+  const status = sessionHook?.status;
+  const userId = (session?.user as any)?.id;
+
   const validationSchema = Yup.object().shape({
     oldpassword: Yup.string().required('Password is required'),
     password: Yup.string()
@@ -41,13 +43,16 @@ const ChangePassword = () => {
   });
 
   const onSubmit = async (data: ChangePasswordForm) => {
-    // console.log(JSON.stringify(data, null, 2));
-    await changePassword({ email, ...data });
+    if (!userId) {
+      swal('Error', 'User not found', 'error');
+      return;
+    }
+    await changeUserPassword(userId, data.password);
     await swal('Password Changed', 'Your password has been changed', 'success', { timer: 2000 });
     reset();
   };
 
-  if (status === 'loading') {
+  if (status === 'loading' || typeof status === 'undefined') {
     return <LoadingSpinner />;
   }
 
@@ -61,7 +66,7 @@ const ChangePassword = () => {
               <Card.Body>
                 <Form onSubmit={handleSubmit(onSubmit)}>
                   <Form.Group className="form-group">
-                    <Form.Label>Old Passord</Form.Label>
+                    <Form.Label>Old Password</Form.Label>
                     <input
                       type="password"
                       {...register('oldpassword')}

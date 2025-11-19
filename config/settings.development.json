@@ -1,14 +1,37 @@
 {
   "defaultAccounts": [
-    { "email": "admin@foo.com", "password": "changeme", "role": "ADMIN" },
-    { "email": "john@foo.com", "password": "changeme" },
-    { "email": "miley4@hawaii.edu", "password": "pass" }
-  ],
-
-  "defaultData": [
-    { "name": "Basket", "quantity": 3, "owner": "john@foo.com", "condition": "excellent" },
-    { "name": "Bicycle", "quantity": 2, "owner": "john@foo.com", "condition": "poor" },
-    { "name": "Banana", "quantity": 2, "owner": "admin@foo.com", "condition": "good" },
-    { "name": "Boogie Board", "quantity": 2, "owner": "admin@foo.com", "condition": "excellent" }
+    {
+      "id": 1,
+      "firstName": "Bob",
+      "lastName": "The-Builder",
+      "UHemail": "admin@foo.com",
+      "password": "changeme1",
+      "role": "ADMIN",
+      "preferences": "Prefers a clean, quiet environment. Non-smoker.",
+      "roommateStatus": "Looking",
+      "budget": 1000.00
+    },
+    {
+      "id": 2,
+      "firstName": "John",
+      "lastName": "Doe",
+      "UHemail": "john@foo.com",
+      "password": "changeme2",
+      "role": "USER",
+      "preferences": "Looking for a roommate who enjoys social activities and is easy-going.",
+      "roommateStatus": "Looking",
+      "budget": 800.00
+    },
+    {
+      "id": 3,
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "UHemail": "jane@foo.com",
+      "password": "changeme3",
+      "role": "USER",
+      "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",
+      "roommateStatus": "Has Roommate",
+      "budget": 900.00
+    }
   ]
 }
