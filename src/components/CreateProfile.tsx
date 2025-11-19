@@ -84,7 +84,7 @@ const CreateUserProfile: React.FC = () => {
                     <Row>
                       <Col>
                         <Form.Group>
-                          <Form.Label>How do you keep your space?</Form.Label>
+                          <Form.Label>How clean do you keep your space?</Form.Label>
                           <select {...register('clean')} className={`form-control ${errors.clean ? 'is-invalid' : ''}`}>
                             <option value="excellent">Excellent</option>
                             <option value="good">Good</option>
@@ -98,7 +98,7 @@ const CreateUserProfile: React.FC = () => {
                           <Form.Label>What is your budget?</Form.Label>
                           <input
                             type="number"
-                            step="10.00"
+                            step="100.00"
                             {...register('budget')}
                             className={`form-control ${errors.budget ? 'is-invalid' : ''}`}
                           />
