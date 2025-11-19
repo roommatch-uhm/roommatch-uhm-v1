@@ -48,7 +48,7 @@ Messaging platform to connect potential matches to each other.
   <li>Profile creation and viewing require authentication</li>
 </ul>
 
-<h3>Modern Tooling</h3>
+<h3>Tools</h3>
 <ul>
   <li>Next.js App Router</li>
   <li>React Bootstrap</li>
