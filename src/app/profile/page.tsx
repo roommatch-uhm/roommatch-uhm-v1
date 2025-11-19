@@ -1,4 +1,5 @@
 import { getServerSession } from 'next-auth';
+import { Role } from '@prisma/client';
 import { Col, Container, Row } from 'react-bootstrap';
 import { prisma } from '@/lib/prisma';
 import Card from '@/components/Card';
@@ -9,18 +10,21 @@ import authOptions from '@/lib/authOptions';
 const ProfilePage = async () => {
   // Protect the page, only logged in users can access it.
   const session = await getServerSession(authOptions);
-  loggedInProtectedPage(
-    session as {
-      user: { email: string; id: string; randomKey: string };
-      // eslint-disable-next-line @typescript-eslint/comma-dangle
-    } | null,
-  );
-  const owner = (session && session.user && session.user.email) || '';
+  // Narrow the session to the shape we expect (id is a string from NextAuth)
+  const typedSession = session as unknown as {
+    user: { email: string; id: string; role: Role };
+  } | null;
+  loggedInProtectedPage(typedSession, '/create');
+
+  console.log('CreateProfilePage session:', typedSession);
+  // NextAuth stores the id as a string in the token; convert to number for Prisma
+  const owner = typedSession?.user?.id ? parseInt(typedSession.user.id, 10) : 0;
   const profile = await prisma.profile.findUnique({
     where: {
-      owner,
+      id: owner,
     },
   });
+  
   // console.log(profile);
   return (
     <main>

@@ -3,6 +3,7 @@
 // Import Prisma client and types
 import { PrismaClient, Role } from '@prisma/client';
 import { hash } from 'bcrypt';
+import { redirect } from 'next/navigation';
 
 const prisma = new PrismaClient();
 
@@ -57,13 +58,11 @@ export async function createUserProfile({
 }
 
 export async function createProfile(profile: {
-  firstName: string;
-  lastName: string;
-  roomStatus: string;
-  bio: string;
+  name: string;
+  description: string;
   image?: string | null;
   clean: string;
-  budget: string;
+  budget: number;
   social: string;
   study: string;
   sleep: string;
@@ -72,13 +71,11 @@ export async function createProfile(profile: {
   // console.log(`createProfile data: ${JSON.stringify(profile, null, 2)}`);
   await prisma.profile.create({
     data: {
-      firstName: profile.firstName || '',
-      lastName: profile.lastName || '',
-      roomStatus: profile.roomStatus || '',
-      bio: profile.bio || '',
+      name: profile.name || '',
+      description: profile.description || '',
       image: profile.image || '',
       clean: profile.clean || '',
-      budget: profile.budget || '',
+      budget: profile.budget || 0,
       social: profile.social || '',
       study: profile.study || '',
       sleep: profile.sleep || '',
