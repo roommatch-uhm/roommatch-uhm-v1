@@ -11,8 +11,11 @@ const ListMatches = async () => {
   // Protect the page, only logged in users can access it.
   const session = await getServerSession(authOptions);
   loggedInProtectedPage(
-    session as any,
-  );
+    session as {
+      user: { email: string; id: string; randomKey: string };
+      // eslint-disable-next-line @typescript-eslint/comma-dangle
+    } | null,
+  ); 
 
   const profiles: Profile[] = await prisma.profile.findMany();
 
