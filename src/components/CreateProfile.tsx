@@ -12,13 +12,11 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { CreateProfileSchema } from '@/lib/validationSchemas';
 
 const onSubmit = async (data: {
-  firstName: string;
-  lastName: string;
-  roomStatus: string;
-  bio: string;
-  image?: string | null;
+  name: string;
+  description: string;
+  image: string;
   clean: string;
-  budget: string;
+  budget: number;
   social: string;
   study: string;
   sleep: string;
@@ -63,50 +61,21 @@ const CreateProfile: React.FC = () => {
                     <Row>
                       <Col>
                         <Form.Group>
-                          <Form.Label>First Name</Form.Label>
+                          <Form.Label>Name</Form.Label>
                           <input
                             type="text"
-                            {...register('firstName')}
-                            className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
+                            {...register('name')}
+                            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
                           />
-                          <div className="invalid-feedback">{errors.firstName?.message}</div>
-                        </Form.Group>
-                      </Col>
-                      <Col>
-                        <Form.Group>
-                          <Form.Label>Last Name</Form.Label>
-                          <input
-                            type="text"
-                            {...register('lastName')}
-                            className={`form-control ${errors.lastName ? 'is-invalid' : ''}`}
-                          />
-                          <div className="invalid-feedback">{errors.lastName?.message}</div>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col>
-                        <Form.Group>
-                          <Form.Label>Room Status</Form.Label>
-                          {/* Use the session email as the canonical value. Make it readOnly so user input isn't
-                              accidentally overridden by another input. If you want users to edit it, remove
-                              readOnly and the defaultValue will be the session email. */}
-                          <select
-                            {...register('roomStatus')}
-                            className={`form-control ${errors.roomStatus ? 'is-invalid' : ''}`}
-                            defaultValue="seeking"
-                          >
-                            <option value="seeking">Seeking Roommate</option>
-                            <option value="offering">Offering Room</option>
-                          </select>
+                          <div className="invalid-feedback">{errors.name?.message}</div>
                         </Form.Group>
                       </Col>
                     </Row>
                     <Row>
                       <Form.Group>
-                        <Form.Label>Your Bio</Form.Label>
-                        <textarea {...register('bio')} className={`form-control ${errors.bio ? 'is-invalid' : ''}`} />
-                        <div className="invalid-feedback">{errors.bio?.message}</div>
+                        <Form.Label>Your Description</Form.Label>
+                        <textarea {...register('description')} className={`form-control ${errors.description ? 'is-invalid' : ''}`} />
+                        <div className="invalid-feedback">{errors.description?.message}</div>
                       </Form.Group>
                     </Row>
                     <Row>
@@ -124,14 +93,13 @@ const CreateProfile: React.FC = () => {
                       <Col>
                         <Form.Group>
                           <Form.Label>What is your budget?</Form.Label>
-                          <select
+                          <input
+                            type="number"
+                            step="10.00"
                             {...register('budget')}
                             className={`form-control ${errors.budget ? 'is-invalid' : ''}`}
-                          >
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                          </select>
+                          />
+                          <div className="invalid-feedback">{errors.budget?.message}</div>
                         </Form.Group>
                       </Col>
                     </Row>
