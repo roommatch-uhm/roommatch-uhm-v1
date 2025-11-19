@@ -56,6 +56,38 @@ export async function createUserProfile({
   return user;
 }
 
+export async function createProfile(profile: {
+  firstName: string;
+  lastName: string;
+  roomStatus: string;
+  bio: string;
+  image?: string | null;
+  clean: string;
+  budget: string;
+  social: string;
+  study: string;
+  sleep: string;
+}
+) {
+  // console.log(`createProfile data: ${JSON.stringify(profile, null, 2)}`);
+  await prisma.profile.create({
+    data: {
+      firstName: profile.firstName || '',
+      lastName: profile.lastName || '',
+      roomStatus: profile.roomStatus || '',
+      bio: profile.bio || '',
+      image: profile.image || '',
+      clean: profile.clean || '',
+      budget: profile.budget || '',
+      social: profile.social || '',
+      study: profile.study || '',
+      sleep: profile.sleep || '',
+    },
+  });
+  // After adding, redirect to the home page
+  redirect('/profile');
+}
+
 /**
  * Update a user's profile.
  * @param userId - The ID of the user to update.
