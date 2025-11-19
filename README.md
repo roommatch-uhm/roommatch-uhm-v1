@@ -117,10 +117,10 @@ model Profile {
   name          String
   description   String
   clean         Clean       @default(messy)
-  budget        Budget      @default($300-$599/month)
-  social        Social      @default(keep to myself)
-  study         Study       @default(constant focus)  
-  sleep         Sleep       @default(night owl)
+  budget        Budget      @default(budget_300_599)
+  social        Social      @default(keep_to_myself)
+  study         Study       @default(constant_focus)  
+  sleep         Sleep       @default(night_owl)
 }
 </pre>
 
