@@ -46,15 +46,15 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
               width: '50%',
               display: 'flex',
               justifyContent: 'center',
-              alignItems: 'flex-start',
+              alignItems: 'flex-start', // align top
             }}
           >
             <Image
-              src={profile.image}
+              src="/images/johndoe.jpg"
               rounded
               style={{
                 width: '100%',
-                maxHeight: '200px',
+                maxHeight: '200px', // smaller image
                 objectFit: 'contain',
               }}
             />
