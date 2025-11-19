@@ -9,7 +9,7 @@ such as cleanliness, study habits, sleep schedule, budget, and social style.
 The project uses Next.js, React Bootstrap, Prisma, and NextAuth, and is deployed on Vercel.
 </p>
 
-<p>Live Site: <a href="https://roommatch-uhm-v1-bllyvtf8u-roommatch-uhm.vercel.app">roommatch-uhm.vercel.app</a></p>
+<p>Live Site: <a href="https://roommatch-uhm-v1-7h8y5lrs2-roommatch-uhm.vercel.app">roommatch-uhm.vercel.app</a></p>
 
 <hr />
 
