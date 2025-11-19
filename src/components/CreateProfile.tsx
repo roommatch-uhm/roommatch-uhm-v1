@@ -1,9 +1,8 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-// User type not needed in this component
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
-import { useForm } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import swal from 'sweetalert';
 import { redirect } from 'next/navigation';
@@ -11,34 +10,38 @@ import { createProfile } from '@/lib/dbActions';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { CreateProfileSchema } from '@/lib/validationSchemas';
 
-const onSubmit = async (data: {
+type FormValues = {
   name: string;
   description: string;
-  image: string;
-  clean: string;
-  budget: number;
-  social: string;
-  study: string;
-  sleep: string;
-}) => {
-  // console.log(`onSubmit data: ${JSON.stringify(data, null, 2)}`);
-  await createProfile(data);
+  image?: string | null; // allow null/undefined to match the schema
+  clean: 'excellent' | 'good' | 'fair' | 'poor';
+  budget?: number | null;
+  social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
+  study: 'Cramming' | 'Regular' | 'None';
+  sleep: 'Early_Bird' | 'Night_Owl' | 'Flexible';
+};
+
+const onSubmit: SubmitHandler<FormValues> = async (data) => {
+  await createProfile(data as any);
   swal('Success', 'Your Profile has been saved', 'success', {
     timer: 2000,
   });
 };
 
-const CreateProfile: React.FC = () => {
+const CreateUserProfile: React.FC = () => {
   const { data: session, status } = useSession();
-  const currentUser = session?.user?.email as string;
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({
+  } = useForm<FormValues>({
     resolver: yupResolver(CreateProfileSchema),
+    defaultValues: {
+      image: '', // <-- set default value
+    },
   });
+
   if (status === 'loading') {
     return <LoadingSpinner />;
   }
@@ -156,7 +159,6 @@ const CreateProfile: React.FC = () => {
                     </Form.Group>
                   </Col>
                 </Row>
-                {/* removed hidden input that duplicated the 'email' registration and overwrote user input */}
                 <Form.Group className="form-group">
                   <Row className="pt-3">
                     <Col>
@@ -180,4 +182,4 @@ const CreateProfile: React.FC = () => {
   );
 };
 
-export default CreateProfile;
+export default CreateUserProfile;
