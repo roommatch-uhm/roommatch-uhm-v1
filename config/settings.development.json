@@ -32,6 +32,17 @@
       "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",
       "roommateStatus": "Has Roommate",
       "budget": 900.00
+    },
+    {
+      "id": 4,
+      "firstName": "Milo",
+      "lastName": "Smith",
+      "UHemail": "milo@foo.com",
+      "password": "changeme4",
+      "role": "USER",
+      "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",
+      "roommateStatus": "Has Roommate",
+      "budget": 1100.00
     }
   ]
 }

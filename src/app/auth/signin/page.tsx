@@ -13,8 +13,10 @@ const SignIn = () => {
     };
     const email = target.email.value;
     const password = target.password.value;
+    const params = new URLSearchParams(window.location.search);
+    const callback = params.get('callbackUrl') ?? '/list';
     const result = await signIn('credentials', {
-      callbackUrl: '/list',
+      callbackUrl: callback,
       email,
       password,
     });
@@ -42,7 +44,7 @@ const SignIn = () => {
                     <input name="password" type="password" className="form-control" />
                   </Form.Group>
                   <Button type="submit" className="mt-3">
-                    Signin
+                    Sign in
                   </Button>
                 </Form>
               </Card.Body>

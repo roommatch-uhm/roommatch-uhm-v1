@@ -40,7 +40,7 @@ const authOptions: NextAuthOptions = {
         return {
           id: `${user.id}`,
           email: user.UHemail,
-          randomKey: user.role,
+          role: user.role,
         };
       },
     }),
@@ -60,7 +60,7 @@ const authOptions: NextAuthOptions = {
         user: {
           ...session.user,
           id: token.id,
-          randomKey: token.randomKey,
+          role: token.role,
         },
       };
     },
@@ -71,7 +71,7 @@ const authOptions: NextAuthOptions = {
         return {
           ...token,
           id: u.id,
-          randomKey: u.randomKey,
+          role: u.role,
         };
       }
       return token;
