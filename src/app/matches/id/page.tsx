@@ -1,0 +1,124 @@
+import { Container, Row, Col, Card, ListGroup, Badge, Button, ProgressBar } from 'react-bootstrap';
+import Link from 'next/link';
+
+type Match = {
+    id: number;
+    name: string;
+    description: string;
+    compatabilityScore: number;
+    budget: number;
+    clean: string;
+    social: string;
+    study: string;
+    sleep: string;
+    housingPreference: string;
+    locationPreference: string;
+};
+
+const mockMatch: Match = {
+    id: 1,
+    name: "John Doe",
+    description: "A friendly and tidy roommate looking for a place near campus.",
+    compatabilityScore: 85,
+    budget: 700,
+    clean: "Very Clean",
+    social: "Moderately Social",
+    study: "Focused",
+    sleep: "Early Riser",
+    housingPreference: "Apartment",
+    locationPreference: "<5 minutes from Campus",
+}
+
+export default function MatchDetailPage({ params }: { params: { id: string } }) {
+  const match = mockMatch;
+  return (
+    <Container className="py-4">
+    <Row className="mb-3">
+        <Col>
+          <Link href="/list" className="text-decoration-none">
+            &larr; Back to Browse Listings
+          </Link>
+        </Col>
+      </Row>
+
+      <Row>
+        {/* Left column – main profile info */}
+        <Col md={8} className="mb-4">
+          <Card>
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <Card.Title className="mb-1">{match.name}</Card.Title>
+                </div>
+                <div className="text-end">
+                  <div className="fw-bold">Compatibility Score</div>
+                  <div className="d-flex align-items-center gap-2">
+                    <div style={{ minWidth: '80px' }}>
+                      <ProgressBar
+                        now={match.compatabilityScore}
+                        label={`${match.compatabilityScore}%`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <hr />
+
+              <Row className="mb-3">
+                <Col md={6}>
+                  <ListGroup variant="flush">
+                    <ListGroup.Item>
+                      <strong>Budget:</strong> {match.budget}
+                    </ListGroup.Item>
+                  </ListGroup>
+                </Col>
+                <Col md={6}>
+                  <ListGroup variant="flush">
+                    <ListGroup.Item>
+                      <strong>Housing Preference:</strong> {match.housingPreference}
+                    </ListGroup.Item>
+                    <ListGroup.Item>
+                      <strong>Location Preference:</strong> {match.locationPreference}
+                    </ListGroup.Item>
+                  </ListGroup>
+                </Col>
+              </Row>
+
+              <h5>About {match.name.split(' ')[0]}</h5>
+              <p>{match.description}</p>
+
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Right column – actions */}
+        <Col md={4}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Connect with {match.name.split(' ')[0]}</Card.Title>
+              <Card.Text>
+                Start a conversation or schedule a time to meet and talk about housing options.
+              </Card.Text>
+              <div className="d-grid gap-2">
+                <Button variant="primary">
+                  Message
+                </Button>
+                <Button variant="outline-primary">
+                  Schedule Meeting
+                </Button>
+              </div>
+
+              <hr />
+
+              <small className="text-muted">
+                Messaging and meetings are for UH Mānoa students only. Please be respectful and
+                follow community guidelines when contacting potential roommates.
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
+  );
+}
