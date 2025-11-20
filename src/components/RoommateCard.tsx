@@ -62,7 +62,7 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
         </div>
       </Card.Body>
       <Card.Footer>
-        <Link href={`/matches/${profile.id}`}>View Details</Link>
+        <Link href={`/matches/id/${profile.id}`}>View Details</Link>
       </Card.Footer>
     </Card>
   );
