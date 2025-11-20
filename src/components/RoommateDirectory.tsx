@@ -4,8 +4,14 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Form } from 'react-bootstrap';
 import RoommateCard from '@/components/RoommateCard';
 import { Profile } from '@prisma/client';
+import { calculateCompatibility } from '@/lib/compatibility';
 
-const RoommateDirectory: React.FC<{ profiles: Profile[] }> = ({ profiles }) => {
+interface RoommateDirectoryProps {
+  profiles: Profile[];
+  currentUserProfile: Profile;
+}
+
+const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({ profiles, currentUserProfile }) => {
   const [search, setSearch] = useState('');
   const [budgetFilter, setBudgetFilter] = useState('');
   const [socialFilter, setSocialFilter] = useState('');
@@ -20,6 +26,13 @@ const RoommateDirectory: React.FC<{ profiles: Profile[] }> = ({ profiles }) => {
     const matchesSocial = socialFilter ? p.social.includes(socialFilter) : true;
     return matchesSearch && matchesBudget && matchesSocial;
   });
+
+  // Sort by compatibility (highest first)
+  const sortedProfiles = [...filteredProfiles].sort(
+    (a, b) =>
+      calculateCompatibility(currentUserProfile, b) -
+      calculateCompatibility(currentUserProfile, a)
+  );
 
   return (
     <Container className="py-4">
@@ -59,7 +72,7 @@ const RoommateDirectory: React.FC<{ profiles: Profile[] }> = ({ profiles }) => {
 
       {/* Cards */}
       <Row xs={1} md={2} className="g-3">
-        {filteredProfiles.map((profile) => (
+        {sortedProfiles.map((profile) => (
           <Col key={profile.id}>
             <RoommateCard profile={profile} />
           </Col>
