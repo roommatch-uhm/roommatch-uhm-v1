@@ -3,7 +3,7 @@
 import { Container, Row, Col, Card, ListGroup, Badge, Button, ProgressBar } from 'react-bootstrap';
 import Link from 'next/link';
 
-type Match = {
+type Profile = {
     id: number;
     name: string;
     description: string;
@@ -17,7 +17,7 @@ type Match = {
     locationPreference: string;
 };
 
-const mockMatch: Match = {
+const mockProfile: Profile = {
     id: 1,
     name: "John Doe",
     description: "A friendly and tidy roommate looking for a place near campus.",
@@ -31,8 +31,8 @@ const mockMatch: Match = {
     locationPreference: "<5 minutes from Campus",
 }
 
-export default function MatchDetailPage({ params }: { params: { id: string } }) {
-  const match = mockMatch;
+export default function profileDetailPage({ params }: { params: { id: string } }) {
+  const profile = mockProfile;
   return (
     <Container className="py-4">
     <Row className="mb-3">
@@ -50,15 +50,15 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                  <Card.Title className="mb-1">{match.name}</Card.Title>
+                  <Card.Title className="mb-1">{profile.name}</Card.Title>
                 </div>
                 <div className="text-end">
                   <div className="fw-bold">Compatibility Score</div>
                   <div className="d-flex align-items-center gap-2">
                     <div style={{ minWidth: '80px' }}>
                       <ProgressBar
-                        now={match.compatabilityScore}
-                        label={`${match.compatabilityScore}%`}
+                        now={profile.compatabilityScore}
+                        label={`${profile.compatabilityScore}%`}
                       />
                     </div>
                   </div>
@@ -71,24 +71,24 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
                 <Col md={6}>
                   <ListGroup variant="flush">
                     <ListGroup.Item>
-                      <strong>Budget:</strong> {match.budget}
+                      <strong>Budget:</strong> {profile.budget}
                     </ListGroup.Item>
                   </ListGroup>
                 </Col>
                 <Col md={6}>
                   <ListGroup variant="flush">
                     <ListGroup.Item>
-                      <strong>Housing Preference:</strong> {match.housingPreference}
+                      <strong>Housing Preference:</strong> {profile.housingPreference}
                     </ListGroup.Item>
                     <ListGroup.Item>
-                      <strong>Location Preference:</strong> {match.locationPreference}
+                      <strong>Location Preference:</strong> {profile.locationPreference}
                     </ListGroup.Item>
                   </ListGroup>
                 </Col>
               </Row>
 
-              <h5>About {match.name.split(' ')[0]}</h5>
-              <p>{match.description}</p>
+              <h5>About {profile.name.split(' ')[0]}</h5>
+              <p>{profile.description}</p>
 
             </Card.Body>
           </Card>
@@ -98,7 +98,7 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
         <Col md={4}>
           <Card>
             <Card.Body>
-              <Card.Title>Connect with {match.name.split(' ')[0]}</Card.Title>
+              <Card.Title>Connect with {profile.name.split(' ')[0]}</Card.Title>
               <Card.Text>
                 Start a conversation or schedule a time to meet and talk about housing options.
               </Card.Text>
