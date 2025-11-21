@@ -5,20 +5,22 @@ import Link from 'next/link';
 
 type Profile = {
     id: number;
+    image: string;
     name: string;
     description: string;
-    compatabilityScore: number;
     budget: number;
     clean: string;
     social: string;
     study: string;
     sleep: string;
+    compatabilityScore: number;
     housingPreference: string;
     locationPreference: string;
 };
 
 const mockProfile: Profile = {
     id: 1,
+    image: ,
     name: "John Doe",
     description: "A friendly and tidy roommate looking for a place near campus.",
     compatabilityScore: 85,
@@ -103,10 +105,18 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                 Start a conversation or schedule a time to meet and talk about housing options.
               </Card.Text>
               <div className="d-grid gap-2">
-                <Button variant="primary">
+                <Button 
+                    as={Link}
+                    href="/messages"
+                    variant="primary"
+                >
                   Message
                 </Button>
-                <Button variant="outline-primary">
+                <Button
+                    as={Link}
+                    href="/meetings"
+                    variant="outline-primary"
+                >
                   Schedule Meeting
                 </Button>
               </div>
