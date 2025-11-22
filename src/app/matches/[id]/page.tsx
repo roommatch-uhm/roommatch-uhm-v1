@@ -20,7 +20,7 @@ type Profile = {
 
 const mockProfile: Profile = {
     id: 1,
-    image: ,
+    image: "/images/johndoe.jpg",
     name: "John Doe",
     description: "A friendly and tidy roommate looking for a place near campus.",
     compatabilityScore: 85,
@@ -76,6 +76,15 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                       <strong>Budget:</strong> {profile.budget}
                     </ListGroup.Item>
                   </ListGroup>
+                  <Image
+                      src="/images/johndoe.jpg"
+                      rounded
+                      style={{
+                         width: '100%',
+                         maxHeight: '200px',
+                         objectFit: 'contain',
+                      }}
+                  />
                 </Col>
                 <Col md={6}>
                   <ListGroup variant="flush">
@@ -91,7 +100,12 @@ export default function profileDetailPage({ params }: { params: { id: string } }
 
               <h5>About {profile.name.split(' ')[0]}</h5>
               <p>{profile.description}</p>
-
+              <ul>
+                  <li>Cleanliness: {profile.clean}</li>
+                  <li>Sleep Schedule: {profile.sleep}</li>
+                  <li>Study Habits: {profile.study}</li>
+                  <li>Social Life: {profile.social}</li>
+              </ul>
             </Card.Body>
           </Card>
         </Col>
