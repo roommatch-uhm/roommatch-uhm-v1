@@ -21,6 +21,7 @@ const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.password) {
+          console.error('Missing email or password');
           return null;
         }
         const user = await prisma.user.findUnique({
@@ -29,14 +30,17 @@ const authOptions: NextAuthOptions = {
           },
         });
         if (!user) {
+          console.error(`User not found: ${credentials.email}`);
           return null;
         }
 
         const isPasswordValid = await compare(credentials.password, user.password);
         if (!isPasswordValid) {
+          console.error(`Invalid password for: ${credentials.email}`);
           return null;
         }
-
+        
+        console.log(`✅ Login successful for: ${user.UHemail}`)
         return {
           id: `${user.id}`,
           email: user.UHemail,

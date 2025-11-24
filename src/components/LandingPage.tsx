@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 export default function LandingPage() {
   return (
@@ -21,12 +22,13 @@ export default function LandingPage() {
                 A safer and more efficient way for UH Mānoa students to find
                 housing and compatible roommates.
               </p>
-              <button
+              <Link
+                href="/auth/signup"
                 className="btn btn-dark btn-lg px-5 py-3"
                 style={{ borderRadius: '8px', fontSize: '1.1rem' }}
               >
                 Get Started
-              </button>
+              </Link>
             </div>
           </div>
         </div>
