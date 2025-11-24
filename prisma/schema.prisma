@@ -23,16 +23,17 @@ enum Role {
 }
 
 model User {
-  id              Int    @id @default(autoincrement())
+  id              Int         @id @default(autoincrement())
   firstName       String
   lastName        String
-  UHemail         String @unique
+  UHemail         String      @unique
   password        String
-  role            Role   @default(USER)
+  role            Role        @default(USER)
   preferences     String?
-  roommateStatus  String //Options can be "Looking", "Not Looking", "Has Roommate"
+  roommateStatus  String      //Options can be "Looking", "Not Looking", "Has Roommate"
   budget          Float?
-  answers         Answer[] // Needed for matching algorithm
+  answers         Answer[]    // Needed for matching algorithm
+  meetings        Meeting[]   // Needed for Meetings feature
 }
 
 // Model for storing questions
@@ -65,3 +66,13 @@ model Profile {
   study         String 
   sleep         String
 }
+
+model Meeting {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  date      DateTime
+  time      String
+  title     String
+  user      User      @relation(fields: [userId], references: [id])
+}
+
