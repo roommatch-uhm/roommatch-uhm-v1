@@ -1,5 +1,8 @@
 'use client';
 
+
+import { useSession } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 import React, { useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -15,6 +18,11 @@ interface Meeting {
 }
 
 export default function MeetingsPage() {
+  const { data: session, status } = useSession();
+
+  if (status === 'loading') return <p className="text-center mt-5">Loading...</p>;
+  if (!session) redirect('/auth/signin');
+  
   const [value, setValue] = useState<Value>(new Date());
   const [meetings, setMeetings] = useState<Meeting[]>([
     { date: '2025-11-21', time: '10:00', title: 'Coffee chat with Jamie @ Campus Center' },

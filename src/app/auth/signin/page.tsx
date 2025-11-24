@@ -1,10 +1,13 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
+import { useState } from "react";
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 
 /** The sign in page. */
 const SignIn = () => {
+  const [error, setError] = useState('');
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.target as typeof e.target & {
@@ -13,6 +16,12 @@ const SignIn = () => {
     };
     const email = target.email.value;
     const password = target.password.value;
+
+    if (!email.endsWith('@hawaii.edu')) {
+      setError('Please use your @hawaii.edu email address.');
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const callback = params.get('callbackUrl') ?? '/list';
     const result = await signIn('credentials', {
@@ -50,7 +59,7 @@ const SignIn = () => {
               </Card.Body>
               <Card.Footer>
                 Don&apos;t have an account?
-                <a href="/auth/signup">Sign up</a>
+                <a href="/auth/signup"> Sign up</a>
               </Card.Footer>
             </Card>
           </Col>
