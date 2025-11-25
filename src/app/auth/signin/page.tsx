@@ -28,10 +28,17 @@ const SignIn = () => {
       callbackUrl: callback,
       email,
       password,
+      redirect: false, // Prevent auto-redirect so we can handle errors
     });
 
     if (result?.error) {
-      console.error('Sign in failed: ', result.error);
+      setError(result.error); // Show error to user
+      return;
+    }
+
+    // If successful, redirect manually
+    if (result?.url) {
+      window.location.href = result.url;
     }
   };
 
@@ -44,6 +51,7 @@ const SignIn = () => {
             <Card>
               <Card.Body>
                 <Form method="post" onSubmit={handleSubmit}>
+                  {error && <div className="text-danger mb-2">{error}</div>}
                   <Form.Group controlId="formBasicEmail">
                     <Form.Label>Email</Form.Label>
                     <input name="email" type="text" className="form-control" />
