@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 type Profile = {
     id: number;
-    image: string;
+    image: string | null;
     name: string;
     description: string;
     budget: number;

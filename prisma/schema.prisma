@@ -57,7 +57,7 @@ model Answer {
 
 model Profile {
   id            Int       @id @default(autoincrement())
-  image         String
+  image         String?
   name          String
   description   String
   clean         String
