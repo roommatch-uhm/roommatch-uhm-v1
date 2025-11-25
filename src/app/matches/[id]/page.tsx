@@ -119,20 +119,16 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                 Start a conversation or schedule a time to meet and talk about housing options.
               </Card.Text>
               <div className="d-grid gap-2">
-                <Button 
-                    as={Link}
-                    href="/messages"
-                    variant="primary"
-                >
-                  Message
-                </Button>
-                <Button
-                    as={Link}
-                    href="/meetings"
-                    variant="outline-primary"
-                >
-                  Schedule Meeting
-                </Button>
+                <Link href="/messages" passHref legacyBehavior>
+                  <Button variant="primary">
+                    Message
+                  </Button>
+                </Link>
+                <Link href="/meetings" passHref legacyBehavior>
+                  <Button variant="outline-primary">
+                    Schedule Meeting
+                  </Button>
+                </Link>
               </div>
 
               <hr />
