@@ -15,7 +15,8 @@ export async function GET(req: Request) {
 
 // POST: Create a new meeting
 export async function POST(req: Request) {
-  const { userId, title, date, time } = await req.json();
+  let { userId, title, date, time } = await req.json();
+  userId = Number(userId); // Ensure userId is an integer
   if (!userId || !title || !date || !time) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
