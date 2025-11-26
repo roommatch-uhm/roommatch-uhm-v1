@@ -3,7 +3,6 @@
 // Import Prisma client and types
 import { PrismaClient, Role } from '@prisma/client';
 import { hash } from 'bcrypt';
-import { redirect } from 'next/navigation';
 
 const prisma = new PrismaClient();
 
@@ -57,32 +56,40 @@ export async function createUserProfile({
   return user;
 }
 
-export async function createProfile(profile: {
+export type CreateProfileInput = {
+  userId: number;
   name: string;
   description: string;
-  image?: string | null;
-  clean: string;
+  image: string | null;
+  clean: 'excellent' | 'good' | 'fair' | 'poor';
   budget: number;
-  social: string;
-  study: string;
-  sleep: string;
-}
-) {
-  // console.log(`createProfile data: ${JSON.stringify(profile, null, 2)}`);
-  await prisma.profile.create({
+  social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
+  study: 'Cramming' | 'Regular' | 'None';
+  sleep: 'Early_Bird' | 'Night_Owl' | 'Flexible';
+};
+
+export async function createProfile(profile: CreateProfileInput) {
+  const created = await prisma.profile.create({
     data: {
-      name: profile.name || '',
-      description: profile.description || '',
-      image: profile.image || '',
-      clean: profile.clean || '',
-      budget: profile.budget || 0,
-      social: profile.social || '',
-      study: profile.study || '',
-      sleep: profile.sleep || '',
+      userId: profile.userId,
+      name: profile.name,
+      description: profile.description,
+      image: profile.image ?? null,
+      clean: profile.clean,
+      budget: profile.budget,
+      social: profile.social,
+      study: profile.study,
+      sleep: profile.sleep,
     },
   });
-  // After adding, redirect to the home page
-  redirect('/profile');
+
+  return created;
+}
+
+export async function getProfileByUserId(userId: number) {
+  return prisma.profile.findUnique({
+    where: { userId },
+  });
 }
 
 /**

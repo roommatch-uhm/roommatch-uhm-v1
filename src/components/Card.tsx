@@ -19,7 +19,7 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
 
   const attributes = [
     profile.clean,
-    profile.budget,
+    profile.budget ? `$${profile.budget}` : null,
     profile.social,
     profile.study,
     profile.sleep,
@@ -27,26 +27,20 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
 
   return (
     <Card
-      style={{ minHeight: '400px', maxWidth: '700px' }} // smaller overall
+      style={{ minHeight: '400px', maxWidth: '700px' }}
       className="w-100 p-3 mx-auto"
     >
-      {/* Header with name */}
       <Card.Header>
         <Card.Title className="mb-2">{profile.name}</Card.Title>
       </Card.Header>
 
       <Card.Body>
-        <div className="d-flex">
-          {/* Left side: bio + attributes (top-aligned) */}
-          <div style={{ width: '50%', paddingRight: '1rem' }}>
-            {/* Bio */}
+        <div className="d-flex flex-wrap gap-3">
+          {/* Left: bio + attributes */}
+          <div style={{ flex: '1 1 45%' }}>
             <Card.Text style={{ marginBottom: '0.75rem' }}>
-              {
-                'John is a software developer with a passion for building intuitive web applications. He enjoys collaborating with others, learning new technologies, and exploring creative solutions. In his free time, John likes hiking, reading science fiction, and experimenting with photography.'
-              }
+              {profile.description}
             </Card.Text>
-
-            {/* Attributes */}
             <div className="d-flex flex-wrap gap-2">
               {attributes.map((attr, idx) => (
                 <div
@@ -60,22 +54,22 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
             </div>
           </div>
 
-          {/* Right side: image */}
+          {/* Right: uploaded image */}
           <div
             style={{
-              width: '50%',
+              flex: '1 1 45%',
               display: 'flex',
               justifyContent: 'center',
-              alignItems: 'flex-start', // align top
+              alignItems: 'flex-start',
             }}
           >
             <Image
-              src="/images/johndoe.jpg"
+              src={profile.image || '/public/images/default.jpg'}
               rounded
               style={{
                 width: '100%',
-                maxHeight: '200px', // smaller image
-                objectFit: 'contain',
+                maxHeight: '200px',
+                objectFit: 'cover',
               }}
             />
           </div>

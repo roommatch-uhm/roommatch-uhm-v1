@@ -50,12 +50,13 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
             }}
           >
             <Image
-              src="/images/johndoe.jpg"
+              src={profile.image || '/images/default.jpg'} // use actual image or fallback
+              alt={`${profile.name} profile`}
               rounded
               style={{
                 width: '100%',
-                maxHeight: '200px', // smaller image
-                objectFit: 'contain',
+                maxHeight: '200px',
+                objectFit: 'cover',
               }}
             />
           </div>

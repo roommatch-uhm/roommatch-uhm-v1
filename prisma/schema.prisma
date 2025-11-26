@@ -23,45 +23,49 @@ enum Role {
 }
 
 model User {
-  id              Int    @id @default(autoincrement())
-  firstName       String
-  lastName        String
-  UHemail         String @unique
-  password        String
-  role            Role   @default(USER)
-  preferences     String?
-  roommateStatus  String //Options can be "Looking", "Not Looking", "Has Roommate"
-  budget          Float?
-  answers         Answer[] // Needed for matching algorithm
+  id             Int      @id @default(autoincrement())
+  firstName      String
+  lastName       String
+  UHemail        String   @unique
+  password       String
+  role           Role     @default(USER)
+  preferences    String?
+  roommateStatus String
+  budget         Float?
+  answers        Answer[]
+  profile        Profile? // optional because a user may not have a profile yet
 }
 
 // Model for storing questions
 model Question {
-  id        Int      @id @default(autoincrement())
-  text      String   // The question itself
-  type      String   // e.g., 'multiple-choice', 'boolean', 'text'
-  options   String[] // Store options for multiple-choice questions (optional)
-  answers   Answer[]
+  id      Int      @id @default(autoincrement())
+  text    String // The question itself
+  type    String // e.g., 'multiple-choice', 'boolean', 'text'
+  options String[] // Store options for multiple-choice questions (optional)
+  answers Answer[]
 }
 
 // New model for storing answers
 model Answer {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  questionId  Int
-  answer      String   // The answer provided by the user
-  user        User     @relation(fields: [userId], references: [id])
-  question    Question @relation(fields: [questionId], references: [id]) 
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  questionId Int
+  answer     String // The answer provided by the user
+  user       User     @relation(fields: [userId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id])
 }
 
 model Profile {
-  id            Int       @id @default(autoincrement())
-  image         String
-  name          String
-  description   String
-  clean         String
-  budget        Int
-  social        String
-  study         String 
-  sleep         String
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  user        User    @relation(fields: [userId], references: [id])
+  image       String?
+  name        String
+  description String
+  clean       String
+  budget      Float?
+  social      String
+  study       String
+  sleep       String
 }
+
