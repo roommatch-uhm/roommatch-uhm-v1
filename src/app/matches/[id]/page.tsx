@@ -1,40 +1,34 @@
 'use client';
-
+import { notFound } from 'next/navigation';
+import type { Profile } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { calculateCompatibility } from '@/lib/compatibility';
 import { Container, Row, Col, Card, ListGroup, Badge, Button, ProgressBar, Image } from 'react-bootstrap';
 import Link from 'next/link';
 
-type Profile = {
-    id: number;
-    image: string | null;
-    name: string;
-    description: string;
-    budget: number;
-    clean: string;
-    social: string;
-    study: string;
-    sleep: string;
-    compatabilityScore: number;
-    housingPreference: string;
-    locationPreference: string;
-};
+export default async function ProfileDetailPage({ params }: { params: { id: string } }) {
+  const profileId = Number(params.id);
+  if (Number.isNaN(profileId)) {
+    notFound();
+  }
 
-const mockProfile: Profile = {
-    id: 1,
-    image: "/images/johndoe.jpg",
-    name: "John Doe",
-    description: "A friendly and tidy roommate looking for a place near campus.",
-    compatabilityScore: 85,
-    budget: 700,
-    clean: "Very Clean",
-    social: "Moderately Social",
-    study: "Focused",
-    sleep: "Early Riser",
-    housingPreference: "Apartment",
-    locationPreference: "<5 minutes from Campus",
-}
+  const profiles: Profile[] = await prisma.profile.findMany();
 
-export default function profileDetailPage({ params }: { params: { id: string } }) {
-  const profile = mockProfile;
+  if (!profiles.length) {
+    notFound();
+  }
+
+  const currentUserProfile = profiles[0]; 
+
+  const profile = profiles.find((p) => p.id === profileId);
+  if (!profile) {
+    notFound();
+  }
+
+  const compatibilityScore = calculateCompatibility(currentUserProfile, profile);
+
+  const firstName = profile.name.split(' ')[0];
+
   return (
     <Container className="py-4">
     <Row className="mb-3">
