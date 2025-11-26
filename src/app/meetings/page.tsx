@@ -48,15 +48,17 @@ export default function MeetingsPage() {
   }, [session]);
 
   // Calendar highlight logic
-  const meetingDates = meetings.map((m) => m.date);
-  const isMeetingDate = (date: Date) => meetingDates.includes(date.toISOString().split('T')[0]);
+  const meetingDates = meetings.map((m) => m.date.slice(0, 10));
+  const isMeetingDate = (date: Date) =>
+    meetingDates.includes(date.toISOString().slice(0, 10));
 
   const selectedDateValue = Array.isArray(value) ? value[0] : value ?? new Date();
   const selectedDate = selectedDateValue instanceof Date ? selectedDateValue : new Date();
 
   const selectedMeetings = meetings.filter(
-    (m) => m.date === selectedDate.toISOString().split('T')[0],
+    (m) => m.date.slice(0, 10) === selectedDate.toISOString().slice(0, 10)
   );
+
   const handleAddOrEditMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMeeting.title || !newMeeting.date || !newMeeting.time) return;
