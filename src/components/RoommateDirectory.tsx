@@ -1,21 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Container, Row, Col, Form } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Form, Alert, Spinner } from 'react-bootstrap';
 import RoommateCard from '@/components/RoommateCard';
 import { Profile } from '@prisma/client';
 import { calculateCompatibility } from '@/lib/compatibility';
+import { useSession } from 'next-auth/react';
+import { useRouter} from 'next/navigation';
 
 interface RoommateDirectoryProps {
   profiles: Profile[];
   currentUserProfile: Profile;
 }
 
-const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({ profiles, currentUserProfile }) => {
+const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
+  profiles,
+  currentUserProfile,
+}) => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [budgetFilter, setBudgetFilter] = useState('');
   const [socialFilter, setSocialFilter] = useState('');
 
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    }
+  }, [status, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+        <Spinner animation="border" variant="success" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null; // avoid flicker before redirect
+  }
+
+  if (!currentUserProfile) {
+    return (
+      <Container className="py-5 text-center">
+        <Alert variant="warning">
+          You don’t have a profile yet. Please{' '}
+          <a href="/auth/signup" className="fw-bold text-decoration-none text-success">
+            create your profile
+          </a>{' '}
+          to see your roommate matches.
+        </Alert>
+      </Container>
+    );
+  }
+  
   const filteredProfiles = profiles.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
