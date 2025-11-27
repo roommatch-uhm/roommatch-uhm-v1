@@ -59,9 +59,10 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.description.toLowerCase().includes(search.toLowerCase());
-    const matchesBudget = budgetFilter
-      ? p.budget.toString() === budgetFilter
-      : true;
+    const matchesBudget =
+      budgetFilter
+        ? p.budget !== null && p.budget !== undefined && p.budget.toString() === budgetFilter
+        : true;
     const matchesSocial = socialFilter ? p.social.includes(socialFilter) : true;
     return matchesSearch && matchesBudget && matchesSocial;
   });
