@@ -21,7 +21,7 @@ export type CreateProfileInput = {
 export async function createProfile(profile: CreateProfileInput) {
   const created = await prisma.profile.create({
     data: {
-      userId: profile.userId,
+      user: { connect: { id: profile.userId } },
       name: profile.name,
       description: profile.description,
       image: profile.image ?? null,
@@ -122,4 +122,12 @@ export async function createUserProfile({
   });
 
   return user;
+}
+
+export async function changeUserPassword(UHemail: string, newPassword: string) {
+  const hashedPassword = await hash(newPassword, 10);
+  return prisma.user.update({
+    where: { UHemail },
+    data: { password: hashedPassword },
+  });
 }
