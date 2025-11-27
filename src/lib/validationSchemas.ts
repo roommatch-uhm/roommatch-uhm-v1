@@ -5,7 +5,14 @@ export const CreateProfileSchema = Yup.object({
   description: Yup.string()
     .max(500, 'Description must be at most 500 characters')
     .required('Description is required'),
-  image: Yup.string().url('Image must be a valid URL').nullable(),
+  image: Yup.string()
+    .nullable()
+    .notRequired()
+    .test(
+      'is-url-or-relative',
+      'Image must be valid',
+      (val) => !val || /^\/|^https?:\/\//.test(val),
+    ),
   clean: Yup.string()
     .oneOf(['excellent', 'good', 'fair', 'poor'])
     .required('Please select a cleanliness level'),
