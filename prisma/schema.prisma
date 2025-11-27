@@ -69,3 +69,12 @@ model Profile {
   study       String
   sleep       String
 }
+
+model Meeting {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  date      DateTime
+  time      String
+  title     String
+  user      User     @relation(fields: [userId], references: [id])
+}

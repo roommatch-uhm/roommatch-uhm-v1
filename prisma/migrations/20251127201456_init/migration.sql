@@ -39,11 +39,12 @@ CREATE TABLE "Answer" (
 -- CreateTable
 CREATE TABLE "Profile" (
     "id" SERIAL NOT NULL,
-    "image" TEXT NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "image" TEXT,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "clean" TEXT NOT NULL,
-    "budget" INTEGER NOT NULL,
+    "budget" DOUBLE PRECISION,
     "social" TEXT NOT NULL,
     "study" TEXT NOT NULL,
     "sleep" TEXT NOT NULL,
@@ -65,11 +66,17 @@ CREATE TABLE "Meeting" (
 -- CreateIndex
 CREATE UNIQUE INDEX "User_UHemail_key" ON "User"("UHemail");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
+
 -- AddForeignKey
 ALTER TABLE "Answer" ADD CONSTRAINT "Answer_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Answer" ADD CONSTRAINT "Answer_questionId_fkey" FOREIGN KEY ("questionId") REFERENCES "Question"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Meeting" ADD CONSTRAINT "Meeting_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
