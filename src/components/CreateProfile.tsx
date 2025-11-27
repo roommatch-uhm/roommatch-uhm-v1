@@ -215,20 +215,6 @@ export default function CreateUserProfile() {
                         }
                       />
                       <input type="hidden" {...register('image')} />
-                      {selectedImage && (
-                        <div className="mt-2">
-                          <Image
-                            src={selectedImage}
-                            alt="Profile"
-                            rounded
-                            style={{
-                              maxWidth: '100%',
-                              maxHeight: '200px',
-                              objectFit: 'cover',
-                            }}
-                          />
-                        </div>
-                      )}
                     </Form.Group>
                   </Col>
                 </Row>

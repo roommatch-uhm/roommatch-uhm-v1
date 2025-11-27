@@ -42,14 +42,23 @@ const ProfileImageUpload = ({
 
   return (
     <div>
-      <input type="file" accept="image/*" onChange={handleFileChange} />
       {preview && (
-        <img
-          src={preview}
-          alt="preview"
-          style={{ maxWidth: '150px', marginTop: '10px' }}
-        />
+        <div style={{ width: '100%', marginBottom: '12px', textAlign: 'center' }}>
+          <img
+            src={preview}
+            alt="preview"
+            style={{
+              width: '100%',
+              maxWidth: '420px',      // allow large preview but constrain width
+              maxHeight: '420px',     // limit height to avoid overflow
+              objectFit: 'contain',   // preserve aspect ratio, no cropping
+              borderRadius: 8,
+              display: 'inline-block',
+            }}
+          />
+        </div>
       )}
+      <input type="file" accept="image/*" onChange={handleFileChange} />
     </div>
   );
 };
