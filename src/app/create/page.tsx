@@ -10,16 +10,16 @@ const CreateProfilePage = async () => {
   // Protect the page, only logged in users can access it.
   const session = await getServerSession(authOptions);
   // Narrow the session to the shape we expect (id is a string from NextAuth)
-  const typedSession = session as unknown as { user: { email: string; id: string; role: Role } } | null;
+  const typedSession = session as unknown as {
+    user: { email: string; id: string; role: Role };
+  } | null;
   loggedInProtectedPage(typedSession, '/create');
 
   console.log('CreateProfilePage session:', typedSession);
   // NextAuth stores the id as a string in the token; convert to number for Prisma
   const owner = typedSession?.user?.id ? parseInt(typedSession.user.id, 10) : 0;
   const profile = await prisma.profile.findUnique({
-    where: {
-      id: owner,
-    },
+    where: { userId: owner }, // use userId now
   });
 
   if (profile) {
