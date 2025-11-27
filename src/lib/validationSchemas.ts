@@ -5,12 +5,19 @@ export const CreateProfileSchema = Yup.object({
   description: Yup.string()
     .max(500, 'Description must be at most 500 characters')
     .required('Description is required'),
-  image: Yup.string().url('Image must be a valid URL').nullable(),
+  image: Yup.string()
+    .nullable()
+    .notRequired()
+    .test(
+      'is-url-or-relative',
+      'Image must be valid',
+      (val) => !val || /^\/|^https?:\/\//.test(val),
+    ),
   clean: Yup.string()
     .oneOf(['excellent', 'good', 'fair', 'poor'])
     .required('Please select a cleanliness level'),
-  // Match Prisma enum values (Budget: Low | Medium | High)
-  budget: Yup.number().positive('Budget must be positive').nullable(),
+  // allow zero budget; use min(0) instead of .positive()
+  budget: Yup.number().min(0, 'Budget must be 0 or greater').nullable(),
   // Match Prisma enum values (Social: Introvert | Ambivert | Extrovert | Unsure)
   social: Yup.string()
     .oneOf(['Introvert', 'Ambivert', 'Extrovert', 'Unsure'])
@@ -24,6 +31,9 @@ export const CreateProfileSchema = Yup.object({
     .oneOf(['Early_Bird', 'Night_Owl', 'Flexible'])
     .required('Please select a sleep level'),
 });
+
+// reuse same rules for editing
+export const EditProfileSchema = CreateProfileSchema;
 
 const AddUserSchema = Yup.object().shape({
   firstName: Yup.string().required('First name is required'),
