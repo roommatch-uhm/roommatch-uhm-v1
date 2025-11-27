@@ -131,3 +131,22 @@ export async function changeUserPassword(UHemail: string, newPassword: string) {
     data: { password: hashedPassword },
   });
 }
+
+export async function updateUserProfile(userId: number, updates: {
+  firstName?: string;
+  lastName?: string;
+  UHemail?: string;
+  password?: string;
+  role?: Role;
+  roommateStatus?: string;
+  budget?: number;
+}) {
+  const data: any = { ...updates };
+  if (updates.password) {
+    data.password = await hash(updates.password, 10);
+  }
+  return prisma.user.update({
+    where: { id: userId },
+    data,
+  });
+}
