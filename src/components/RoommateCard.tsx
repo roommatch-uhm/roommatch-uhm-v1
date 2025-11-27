@@ -17,6 +17,16 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
     profile.sleep,
   ].filter(Boolean);
 
+  const getImageSrc = (img?: string | null) => {
+    if (!img) return '/uploads/default.jpg';
+    let src = img;
+    if (src.startsWith('public/')) src = src.replace(/^public\//, '');
+    if (!src.startsWith('/') && !/^https?:\/\//.test(src)) src = `/${src}`;
+    return src;
+  };
+
+  const imgSrc = getImageSrc(profile.image ?? null);
+
   return (
     <Card className="h-100">
       <Card.Body>
@@ -50,13 +60,20 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
             }}
           >
             <Image
-              src={profile.image || '/images/default.jpg'} // use actual image or fallback
+              src={imgSrc}
               alt={`${profile.name} profile`}
               rounded
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                const imgEl = e.currentTarget as HTMLImageElement;
+                imgEl.onerror = null;
+                imgEl.src = '/uploads/default.jpg';
+              }}
               style={{
                 width: '100%',
-                maxHeight: '200px',
-                objectFit: 'cover',
+                maxHeight: '350px', // allow taller images
+                height: 'auto',
+                objectFit: 'contain', // don't crop; preserve aspect
+                backgroundColor: '#f8f9fa', // subtle background for letterboxing
               }}
             />
           </div>

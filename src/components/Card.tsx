@@ -25,6 +25,19 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
     profile.sleep,
   ].filter(Boolean);
 
+  // normalize DB path and ensure a usable src; fallback to default when missing
+  const getImageSrc = (img?: string | null) => {
+    if (!img) return '/uploads/default.jpg';
+    let src = img;
+    // remove accidental "public/" prefix
+    if (src.startsWith('public/')) src = src.replace(/^public\//, '');
+    // ensure leading slash for relative paths (uploads/xxx.jpg -> /uploads/xxx.jpg)
+    if (!src.startsWith('/') && !/^https?:\/\//.test(src)) src = `/${src}`;
+    return src;
+  };
+
+  const imgSrc = getImageSrc(profile.image ?? null);
+
   return (
     <Card
       style={{ minHeight: '400px', maxWidth: '700px' }}
@@ -64,12 +77,18 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
             }}
           >
             <Image
-              src={profile.image || '/public/images/default.jpg'}
+              src={imgSrc}
               rounded
+              onError={(e: any) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/uploads/default.jpg';
+              }}
               style={{
                 width: '100%',
-                maxHeight: '200px',
-                objectFit: 'cover',
+                maxHeight: '350px',
+                height: 'auto',
+                objectFit: 'contain',
+                backgroundColor: '#f8f9fa',
               }}
             />
           </div>
