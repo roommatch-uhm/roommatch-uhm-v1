@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { redirect } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -9,17 +11,21 @@ type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 interface Meeting {
+  id?: number;
+  userId?: number;
   date: string;
   time: string;
   title: string;
 }
 
 export default function MeetingsPage() {
+  const { data: session, status } = useSession();
+
+  if (status === 'loading') return <p className="text-center mt-5">Loading...</p>;
+  if (!session) redirect('/auth/signin');
+
   const [value, setValue] = useState<Value>(new Date());
-  const [meetings, setMeetings] = useState<Meeting[]>([
-    { date: '2025-11-21', time: '10:00', title: 'Coffee chat with Jamie @ Campus Center' },
-    { date: '2025-11-26', time: '14:00', title: 'Meeting with Grace @ Hamilton Library' },
-  ]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [newMeeting, setNewMeeting] = useState<Meeting>({
@@ -28,36 +34,73 @@ export default function MeetingsPage() {
     time: '',
   });
 
+  // Fetch meetings from backend when session changes
+  useEffect(() => {
+    async function fetchMeetings() {
+      if (!session?.user) return;
+      const userId = (session.user as any)?.id;
+      if (!userId) return;
+      const res = await fetch(`/api/meetings?userId=${userId}`);
+      const data = await res.json();
+      setMeetings(data);
+    }
+    fetchMeetings();
+  }, [session]);
+
   // Calendar highlight logic
-  const meetingDates = meetings.map((m) => m.date);
-  const isMeetingDate = (date: Date) => meetingDates.includes(date.toISOString().split('T')[0]);
+  const meetingDates = meetings.map((m) => m.date.slice(0, 10));
+  const isMeetingDate = (date: Date) =>
+    meetingDates.includes(date.toISOString().slice(0, 10));
 
   const selectedDateValue = Array.isArray(value) ? value[0] : value ?? new Date();
   const selectedDate = selectedDateValue instanceof Date ? selectedDateValue : new Date();
 
   const selectedMeetings = meetings.filter(
-    (m) => m.date === selectedDate.toISOString().split('T')[0],
+    (m) => m.date.slice(0, 10) === selectedDate.toISOString().slice(0, 10)
   );
 
-  // Add / Edit / Delete handlers
-  const handleAddOrEditMeeting = (e: React.FormEvent) => {
+  const handleAddOrEditMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMeeting.title || !newMeeting.date || !newMeeting.time) return;
 
-    if (editingIndex !== null) {
-      const updated = [...meetings];
-      updated[editingIndex] = newMeeting;
-      setMeetings(updated);
-      setEditingIndex(null);
+    const userId = (session?.user as any)?.id;
+    if (!userId) return;
+
+    if (editingIndex !== null && meetings[editingIndex]?.id) {
+      // Update meeting in backend
+      await fetch(`/api/meetings/${meetings[editingIndex].id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMeeting),
+      });
     } else {
-      setMeetings([...meetings, newMeeting]);
+      // Add meeting to backend
+      await fetch('/api/meetings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newMeeting, userId }),
+      });
     }
+
+    // Refresh meetings from backend
+    const res = await fetch(`/api/meetings?userId=${userId}`);
+    const data = await res.json();
+    setMeetings(data);
 
     setNewMeeting({ title: '', date: '', time: '' });
     setShowForm(false);
   };
 
-  const handleDeleteMeeting = (index: number) => setMeetings(meetings.filter((_, i) => i !== index));
+  const handleDeleteMeeting = async (index: number) => {
+    if (!meetings[index]?.id) return;
+    await fetch(`/api/meetings/${meetings[index].id}`, { method: 'DELETE' });
+    // Refresh meetings
+    const userId = (session?.user as any)?.id;
+    if (!userId) return;
+    const res = await fetch(`/api/meetings?userId=${userId}`);
+    const data = await res.json();
+    setMeetings(data);
+  };
 
   const handleEditMeeting = (index: number) => {
     setNewMeeting(meetings[index]);
@@ -90,9 +133,9 @@ export default function MeetingsPage() {
         <h5 className="fw-semibold mb-3">{selectedDate.toDateString()}</h5>
 
         {selectedMeetings.length > 0 ? (
-          selectedMeetings.map((m) => (
+          selectedMeetings.map((m, idx) => (
             <div
-              key={`${m.date}-${m.time}-${m.title}`}
+              key={m.id ?? `${m.date}-${m.time}-${m.title}`}
               className="meeting-card mx-auto mb-3 p-3 rounded-3 shadow-sm bg-white"
               style={{ maxWidth: '500px' }}
             >
@@ -106,14 +149,14 @@ export default function MeetingsPage() {
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary"
-                  onClick={() => handleEditMeeting(meetings.indexOf(m))}
+                  onClick={() => handleEditMeeting(idx)}
                 >
                   Edit
                 </button>
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-danger"
-                  onClick={() => handleDeleteMeeting(meetings.indexOf(m))}
+                  onClick={() => handleDeleteMeeting(idx)}
                 >
                   Cancel
                 </button>

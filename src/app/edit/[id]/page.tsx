@@ -35,7 +35,7 @@ const EditProfilePage = () => {
       setSocial(data.social);
       setStudy(data.study);
       setSleep(data.sleep);
-      setImage(data.image);
+      setImage(data.image ?? "");
       setLoading(false);
     }
 
