@@ -163,14 +163,43 @@ export default function CreateUserProfile() {
                       </select>
                     </Form.Group>
 
-                    {/* Budget */}
+                    {/* Budget (increment/decrement by 100, never negative) */}
                     <Form.Group className="mb-3">
                       <Form.Label>Budget</Form.Label>
-                      <input
-                        type="number"
-                        {...register('budget', { valueAsNumber: true })}
-                        className="form-control"
-                      />
+                      <div className="d-flex align-items-center gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={() => {
+                            const cur = Number(watch('budget')) || 0;
+                            setValue('budget', Math.max(0, cur - 100), { shouldValidate: true, shouldDirty: true });
+                          }}
+                          aria-label="Decrease budget"
+                          disabled={(Number(watch('budget')) || 0) <= 0}
+                        >
+                          -100
+                        </button>
+
+                        <input
+                          type="number"
+                          {...register('budget', { valueAsNumber: true })}
+                          className="form-control d-inline-block"
+                          style={{ width: 140 }}
+                          readOnly
+                        />
+
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={() => {
+                            const cur = Number(watch('budget')) || 0;
+                            setValue('budget', cur + 100, { shouldValidate: true, shouldDirty: true });
+                          }}
+                          aria-label="Increase budget"
+                        >
+                          +100
+                        </button>
+                      </div>
                     </Form.Group>
 
                     {/* Social */}
