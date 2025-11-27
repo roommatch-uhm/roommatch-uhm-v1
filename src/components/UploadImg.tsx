@@ -4,16 +4,19 @@ import { useState } from 'react';
 
 const ProfileImageUpload = ({
   onUpload,
+  initialUrl,
 }: {
   onUpload: (url: string) => void;
+  initialUrl?: string | null;
 }) => {
-  const [preview, setPreview] = useState<string | null>(null);
+  // use the provided initialUrl as the initial preview (profile image or default)
+  const [preview, setPreview] = useState<string | null>(initialUrl ?? null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show preview
+    // Show local preview immediately
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result as string);
     reader.readAsDataURL(file);
@@ -25,7 +28,7 @@ const ProfileImageUpload = ({
     const formData = new FormData();
     formData.append('file', file, uniqueFileName);
 
-    // POST to your Vercel Blob endpoint
+    // POST to your upload endpoint
     const res = await fetch('/api/uploadProfileImage', {
       method: 'POST',
       body: formData,
@@ -37,11 +40,14 @@ const ProfileImageUpload = ({
     }
 
     const data = await res.json();
+    // update preview to the uploaded URL (so preview becomes canonical)
+    if (data?.url) setPreview(data.url);
     onUpload(data.url); // Save the URL in the form
   };
 
   return (
     <div>
+      {/* Larger preview above the file input */}
       {preview && (
         <div style={{ width: '100%', marginBottom: '12px', textAlign: 'center' }}>
           <img
@@ -49,9 +55,9 @@ const ProfileImageUpload = ({
             alt="preview"
             style={{
               width: '100%',
-              maxWidth: '420px',      // allow large preview but constrain width
-              maxHeight: '420px',     // limit height to avoid overflow
-              objectFit: 'contain',   // preserve aspect ratio, no cropping
+              maxWidth: '420px',
+              maxHeight: '420px',
+              objectFit: 'contain',
               borderRadius: 8,
               display: 'inline-block',
             }}

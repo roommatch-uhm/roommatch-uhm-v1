@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Profile } from '@prisma/client';
 import { Card, Image } from 'react-bootstrap';
+import { Profile } from '@prisma/client';
 
 const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
   if (!profile) {
     return (
-      <Card className="h-100">
+      <Card className="h-100 shadow-sm">
         <Card.Body>
           <Card.Title>No profile found</Card.Title>
           <Card.Text>You don't have a profile yet.</Card.Text>
@@ -25,13 +25,10 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
     profile.sleep,
   ].filter(Boolean);
 
-  // normalize DB path and ensure a usable src; fallback to default when missing
   const getImageSrc = (img?: string | null) => {
     if (!img) return '/uploads/default.jpg';
     let src = img;
-    // remove accidental "public/" prefix
     if (src.startsWith('public/')) src = src.replace(/^public\//, '');
-    // ensure leading slash for relative paths (uploads/xxx.jpg -> /uploads/xxx.jpg)
     if (!src.startsWith('/') && !/^https?:\/\//.test(src)) src = `/${src}`;
     return src;
   };
@@ -39,65 +36,119 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
   const imgSrc = getImageSrc(profile.image ?? null);
 
   return (
-    <Card
-      style={{ minHeight: '400px', maxWidth: '700px' }}
-      className="w-100 p-3 mx-auto"
-    >
-      <Card.Header>
-        <Card.Title className="mb-2">{profile.name}</Card.Title>
-      </Card.Header>
+    <Card className="w-100 mx-auto shadow-lg" style={{ borderRadius: 12, overflow: 'hidden' }}>
+      <div
+        style={{
+          background: 'linear-gradient(135deg,#6a11cb 0%,#2575fc 100%)',
+          color: '#fff',
+          padding: '18px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+        }}
+      >
+        <div style={{ width: 96, height: 96, flex: '0 0 96px' }}>
+          <Image
+            src={imgSrc}
+            alt={profile.name || 'Profile'}
+            roundedCircle
+            onError={(e: any) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = '/uploads/default.jpg';
+            }}
+            style={{
+              width: 96,
+              height: 96,
+              objectFit: 'cover',
+              border: '3px solid rgba(255,255,255,0.18)',
+              boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
+            }}
+          />
+        </div>
 
-      <Card.Body>
-        <div className="d-flex flex-wrap gap-3">
-          {/* Left: bio + attributes */}
-          <div style={{ flex: '1 1 45%' }}>
-            <Card.Text style={{ marginBottom: '0.75rem' }}>
-              {profile.description}
-            </Card.Text>
-            <div className="d-flex flex-wrap gap-2">
-              {attributes.map((attr, idx) => (
-                <div
-                  key={idx}
-                  className="px-3 py-1 rounded border bg-light text-muted small"
-                  style={{ borderColor: '#ddd' }}
-                >
-                  {attr}
-                </div>
-              ))}
-            </div>
-          </div>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ margin: 0, fontWeight: 700 }}>{profile.name}</h3>
+          <div style={{ opacity: 0.9, marginTop: 6 }}>{profile.description?.slice(0, 120) || 'No description'}</div>
+        </div>
 
-          {/* Right: uploaded image */}
+        <div style={{ textAlign: 'right' }}>
           <div
             style={{
-              flex: '1 1 45%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'flex-start',
+              background: 'rgba(255,255,255,0.12)',
+              color: '#fff',
+              padding: '6px 10px',
+              borderRadius: 999,
+              fontWeight: 700,
+              fontSize: 14,
             }}
           >
-            <Image
-              src={imgSrc}
-              rounded
-              onError={(e: any) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = '/uploads/default.jpg';
-              }}
+            {profile.budget ? `$${profile.budget}` : 'No budget'}
+          </div>
+        </div>
+      </div>
+
+      <Card.Body style={{ background: '#fff' }}>
+        <div className="d-flex flex-wrap gap-2 mb-3">
+          {attributes.map((attr, idx) => (
+            <span
+              key={idx}
               style={{
-                width: '100%',
-                maxHeight: '350px',
-                height: 'auto',
-                objectFit: 'contain',
-                backgroundColor: '#f8f9fa',
+                background: '#f1f5f9',
+                padding: '6px 10px',
+                borderRadius: 16,
+                fontSize: 13,
+                color: '#333',
+                boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.02)',
               }}
-            />
+            >
+              {attr}
+            </span>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 20 }}>
+          <div style={{ flex: 1 }}>
+            <h5 style={{ marginBottom: 8 }}>About</h5>
+            <p style={{ marginBottom: 0, color: '#555' }}>{profile.description}</p>
+          </div>
+
+          <div style={{ width: 260 }}>
+            <div
+              style={{
+                borderRadius: 8,
+                overflow: 'hidden',
+                background: '#fafafa',
+                border: '1px solid #eee',
+                padding: 8,
+              }}
+            >
+              <Image
+                src={imgSrc}
+                alt={profile.name || 'Profile'}
+                rounded
+                onError={(e: any) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/uploads/default.jpg';
+                }}
+                style={{
+                  width: '100%',
+                  height: 220,
+                  objectFit: 'contain',
+                  background: '#fff',
+                }}
+              />
+            </div>
           </div>
         </div>
       </Card.Body>
 
-      <Card.Footer className="d-flex justify-content-between">
-        <Link href="/messages">Chat</Link>
-        <Link href={`/edit/${profile.id}`}>Edit</Link>
+      <Card.Footer className="d-flex justify-content-between align-items-center" style={{ background: '#fff' }}>
+        <Link href="/messages" style={{ color: '#2575fc', fontWeight: 600 }}>
+          Chat
+        </Link>
+        <Link href={`/edit/${profile.id}`} style={{ color: '#2575fc', fontWeight: 600 }}>
+          Edit
+        </Link>
       </Card.Footer>
     </Card>
   );
