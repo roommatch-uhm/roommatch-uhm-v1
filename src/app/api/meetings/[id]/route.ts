@@ -34,4 +34,3 @@ export async function DELETE(req: Request, { params }: { params: Params }): Prom
   });
   return NextResponse.json({ success: true });
 }
-
