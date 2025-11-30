@@ -51,7 +51,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/matches" className="text-white text-decoration-none">
+                <Link href="/list" className="text-white text-decoration-none">
                   View RoomMatches
                 </Link>
               </li>
