@@ -1,115 +1,160 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import {
+  Button,
+  Card,
+  Col,
+  Container,
+  Form,
+  Row,
+  Image,
+} from 'react-bootstrap';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import swal from 'sweetalert';
-import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
-import { CreateProfileSchema } from '@/lib/validationSchemas';
+import { useRouter } from 'next/navigation';
 import { createProfile } from '@/lib/dbActions';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { CreateProfileSchema } from '@/lib/validationSchemas';
 import ProfileImageUpload from '@/components/UploadImg';
-import type { CreateProfileInput } from '@/lib/dbActions';
 
-export default function CreateProfileForm() {
-  const { data: session } = useSession();
-  const router = useRouter();
+type FormValues = {
+  name: string;
+  description: string;
+  image?: string | null;
+  clean: 'excellent' | 'good' | 'fair' | 'poor';
+  budget?: number | null;
+  social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
+  study: 'Cramming' | 'Regular' | 'None';
+  sleep: 'Early_Bird' | 'Night_Owl' | 'Flexible';
+};
 
+export default function CreateUserProfile() {
+  const { data: session, status } = useSession();
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
+    watch,
     reset,
-    formState: { errors, isSubmitting },
-  } = useForm<CreateProfileInput>({
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: yupResolver(CreateProfileSchema),
-    defaultValues: {
-      userId: Number((session as any)?.user?.id ?? 0),
-      name: '',
-      description: '',
-      image: null,
-      clean: 'good',
-      budget: 0,
-      social: 'Unsure',
-      study: 'Regular',
-      sleep: 'Flexible',
-    },
+    defaultValues: { image: null, budget: 0 },
   });
 
-  useEffect(() => {
-    // keep userId synced if session becomes available later
-    if (session?.user?.id) {
-      setValue('userId', Number((session as any).user.id));
-    }
-  }, [session, setValue]);
+  const selectedImage = watch('image');
+  const router = useRouter();
 
-  const onSubmit: SubmitHandler<CreateProfileInput> = async (data) => {
+  if (status === 'loading') return <LoadingSpinner />;
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin');
+    return null;
+  }
+
+  // debug: show form errors in console (do not JSON.stringify — errors may contain circular refs)
+  console.log('form errors (raw)', errors);
+  // also produce a serializable summary of messages for easy inspection
+  const serializableErrors = Object.keys(errors).reduce((acc: Record<string, any>, key) => {
+    const e = (errors as any)[key];
+    acc[key] = { message: e?.message ?? null };
+    return acc;
+  }, {});
+  console.log('form errors (summary)', JSON.stringify(serializableErrors, null, 2));
+
+  const onError = (errs: any) => {
+    // Build a friendly message listing each invalid field and message
+    const entries = Object.keys(errs).map((k) => {
+      const m = (errs as any)[k]?.message ?? 'invalid';
+      return `${k}: ${m}`;
+    });
+    const message = entries.length ? entries.join('\n') : 'Some required fields are missing or invalid.';
+    console.log('Validation errors (onError):', errs, message);
+
+    // Focus the first invalid field if present
+    const firstKey = Object.keys(errs)[0];
+    if (firstKey) {
+      const el = document.querySelector(`[name="${firstKey}"]`) as HTMLElement | null;
+      if (el && typeof el.focus === 'function') el.focus();
+    }
+
+    // Show readable message to the user
+    swal('Please fix form errors', message, 'error');
+  };
+
+  // ensure onSubmit is wired to the <Form> below and button is type="submit"
+
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    console.log('onSubmit fired, data=', data);
+    const userIdStr = (session?.user as any)?.id;
+    if (!userIdStr) {
+      swal('Error', 'You must be logged in', 'error');
+      return;
+    }
+
     try {
-      await createProfile(data);
-      swal('Success', 'Profile created', 'success');
+      const payload = {
+        ...data,
+        userId: parseInt(userIdStr, 10),
+        budget: Number(data.budget) || 0,
+        image: data.image ?? null,
+      };
+
+      console.log('Submitting profile payload:', payload);
+      const created = await createProfile(payload);
+      console.log('createProfile returned:', created);
+
+      swal('Success', 'Your Profile has been saved', 'success', { timer: 1500 });
       router.push('/profile');
-    } catch (err) {
-      console.error(err);
-      swal('Error', 'Could not create profile', 'error');
+    } catch (err: any) {
+      console.error('createProfile error', err);
+      swal('Error', err?.message || 'Failed to create profile', 'error');
     }
   };
 
-  if (!session) {
-    return <LoadingSpinner />;
-  }
-
   return (
-    <Container className="py-4">
+    <Container className="py-3">
       <Row className="justify-content-center">
-        <Col xs={12} md={10} lg={8}>
-          <Card className="shadow" style={{ borderRadius: 14, overflow: 'hidden' }}>
-            <div
-              style={{
-                background: 'linear-gradient(90deg, rgba(37,117,252,0.06), rgba(106,17,203,0.04))',
-                padding: '18px 22px',
-                borderBottom: '1px solid rgba(0,0,0,0.03)',
-              }}
-            >
-              <h2 style={{ margin: 0, fontWeight: 700 }}>Create your Profile</h2>
-              <div style={{ color: '#666', marginTop: 6 }}>Tell others a bit about yourself</div>
-            </div>
-
-            <Card.Body style={{ background: '#fff' }}>
-              <Form onSubmit={handleSubmit(onSubmit)}>
+        <Col xs={500}>
+          <h2 className="text-center">Create your Profile</h2>
+          <Card>
+            <Card.Body>
+              <Form onSubmit={handleSubmit(onSubmit, onError)}>
                 <Row>
-                  <Col md={7}>
+                  <Col>
                     {/* Name */}
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Name</Form.Label>
+                      <Form.Label>Name</Form.Label>
                       <input
                         type="text"
                         {...register('name')}
                         className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-                        style={{ boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.03)' }}
                       />
-                      {errors.name && <div className="invalid-feedback d-block">{String(errors.name?.message)}</div>}
+                      {errors.name && (
+                        <div className="invalid-feedback d-block">
+                          {String(errors.name?.message)}
+                        </div>
+                      )}
                     </Form.Group>
 
                     {/* Description */}
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Description</Form.Label>
+                      <Form.Label>Description</Form.Label>
                       <textarea
                         {...register('description')}
                         className={`form-control ${errors.description ? 'is-invalid' : ''}`}
-                        rows={4}
-                        style={{ boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.03)' }}
                       />
                       {errors.description && (
-                        <div className="invalid-feedback d-block">{String(errors.description?.message)}</div>
+                        <div className="invalid-feedback d-block">
+                          {String(errors.description?.message)}
+                        </div>
                       )}
                     </Form.Group>
 
                     {/* Clean */}
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Cleanliness</Form.Label>
+                      <Form.Label>Cleanliness</Form.Label>
                       <select {...register('clean')} className="form-control">
                         <option value="excellent">Excellent</option>
                         <option value="good">Good</option>
@@ -118,9 +163,9 @@ export default function CreateProfileForm() {
                       </select>
                     </Form.Group>
 
-                    {/* Budget (increment/decrement by 100, also editable) */}
+                    {/* Budget (increment/decrement by 100, never negative) */}
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Budget</Form.Label>
+                      <Form.Label>Budget</Form.Label>
                       <div className="d-flex align-items-center gap-2">
                         <button
                           type="button"
@@ -131,7 +176,6 @@ export default function CreateProfileForm() {
                           }}
                           aria-label="Decrease budget"
                           disabled={(Number(watch('budget')) || 0) <= 0}
-                          style={{ borderRadius: 8 }}
                         >
                           -100
                         </button>
@@ -139,17 +183,9 @@ export default function CreateProfileForm() {
                         <input
                           type="number"
                           {...register('budget', { valueAsNumber: true })}
-                          className="form-control"
-                          style={{ width: 140, boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.03)' }}
-                          min={0}
-                          onBlur={(e) => {
-                            const n = Number((e.target as HTMLInputElement).value);
-                            if (Number.isNaN(n)) {
-                              setValue('budget', 0, { shouldValidate: true, shouldDirty: true });
-                            } else {
-                              setValue('budget', Math.max(0, n), { shouldValidate: true, shouldDirty: true });
-                            }
-                          }}
+                          className="form-control d-inline-block"
+                          style={{ width: 140 }}
+                          readOnly
                         />
 
                         <button
@@ -160,17 +196,15 @@ export default function CreateProfileForm() {
                             setValue('budget', cur + 100, { shouldValidate: true, shouldDirty: true });
                           }}
                           aria-label="Increase budget"
-                          style={{ borderRadius: 8 }}
                         >
                           +100
                         </button>
                       </div>
-                      <small className="text-muted">You can also type a number directly.</small>
                     </Form.Group>
 
                     {/* Social */}
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Social Life</Form.Label>
+                      <Form.Label>Social Life</Form.Label>
                       <select {...register('social')} className="form-control">
                         <option value="Introvert">Introvert</option>
                         <option value="Ambivert">Ambivert</option>
@@ -181,7 +215,7 @@ export default function CreateProfileForm() {
 
                     {/* Study */}
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Study Habits</Form.Label>
+                      <Form.Label>Study Habits</Form.Label>
                       <select {...register('study')} className="form-control">
                         <option value="Cramming">Cramming</option>
                         <option value="Regular">Regular</option>
@@ -191,7 +225,7 @@ export default function CreateProfileForm() {
 
                     {/* Sleep */}
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Sleep Schedule</Form.Label>
+                      <Form.Label>Sleep Schedule</Form.Label>
                       <select {...register('sleep')} className="form-control">
                         <option value="Early_Bird">Early Bird</option>
                         <option value="Night_Owl">Night Owl</option>
@@ -201,15 +235,14 @@ export default function CreateProfileForm() {
                   </Col>
 
                   {/* Image */}
-                  <Col md={5}>
+                  <Col>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Profile Photo</Form.Label>
-                      <div style={{ borderRadius: 8, padding: 10, border: '1px dashed #e6e9ee', background: '#fafafa' }}>
-                        <ProfileImageUpload
-                          initialUrl={null}
-                          onUpload={(url) => setValue('image', url, { shouldValidate: true, shouldDirty: true })}
-                        />
-                      </div>
+                      <Form.Label>Profile Photo</Form.Label>
+                      <ProfileImageUpload
+                        onUpload={(url) =>
+                          setValue('image', url, { shouldValidate: true, shouldDirty: true })
+                        }
+                      />
                       <input type="hidden" {...register('image')} />
                     </Form.Group>
                   </Col>
@@ -217,28 +250,15 @@ export default function CreateProfileForm() {
 
                 <Row className="pt-3">
                   <Col>
-                    <Button type="submit" variant="primary" className="rounded-pill px-4" disabled={isSubmitting}>
-                      {isSubmitting ? 'Creating...' : 'Create profile'}
+                    <Button type="submit" variant="primary" onClick={() => console.log('Submit button clicked')}>
+                      Submit
                     </Button>
                   </Col>
                   <Col>
                     <Button
                       type="button"
-                      variant="outline-secondary"
-                      onClick={() =>
-                        reset({
-                          userId: Number((session as any)?.user?.id ?? 0),
-                          name: '',
-                          description: '',
-                          image: null,
-                          clean: 'good',
-                          budget: 0,
-                          social: 'Unsure',
-                          study: 'Regular',
-                          sleep: 'Flexible',
-                        })
-                      }
-                      className="rounded-pill"
+                      variant="warning"
+                      onClick={() => reset()}
                     >
                       Reset
                     </Button>

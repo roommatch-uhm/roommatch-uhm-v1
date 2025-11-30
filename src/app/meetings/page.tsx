@@ -42,7 +42,19 @@ export default function MeetingsPage() {
       if (!userId) return;
       const res = await fetch(`/api/meetings?userId=${userId}`);
       const data = await res.json();
-      setMeetings(data);
+
+      // Fetch profile for each meeting's userId
+      const meetingsWithNames = await Promise.all(
+        data.map(async (meeting: Meeting) => {
+          if (meeting.userId) {
+            const profileRes = await fetch(`/api/profiles/by-user/${meeting.userId}`);
+            const profile = profileRes.ok ? await profileRes.json() : null;
+            return { ...meeting, profileName: profile?.name || 'User' };
+          }
+          return { ...meeting, profileName: 'User' };
+        })
+      );
+      setMeetings(meetingsWithNames);
     }
     fetchMeetings();
   }, [session]);
