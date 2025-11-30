@@ -1,40 +1,34 @@
 'use client';
-
+import { notFound } from 'next/navigation';
+import type { Profile } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { calculateCompatibility } from '@/lib/compatibility';
 import { Container, Row, Col, Card, ListGroup, Badge, Button, ProgressBar, Image } from 'react-bootstrap';
 import Link from 'next/link';
 
-type Profile = {
-    id: number;
-    image: string | null;
-    name: string;
-    description: string;
-    budget: number;
-    clean: string;
-    social: string;
-    study: string;
-    sleep: string;
-    compatabilityScore: number;
-    housingPreference: string;
-    locationPreference: string;
-};
+export default async function ProfileDetailPage({ params }: { params: { id: string } }) {
+  const profileId = Number(params.id);
+  if (Number.isNaN(profileId)) {
+    notFound();
+  }
 
-const mockProfile: Profile = {
-    id: 1,
-    image: "/images/johndoe.jpg",
-    name: "John Doe",
-    description: "A friendly and tidy roommate looking for a place near campus.",
-    compatabilityScore: 85,
-    budget: 700,
-    clean: "Very Clean",
-    social: "Moderately Social",
-    study: "Focused",
-    sleep: "Early Riser",
-    housingPreference: "Apartment",
-    locationPreference: "<5 minutes from Campus",
-}
+  const profiles: Profile[] = await prisma.profile.findMany();
 
-export default function profileDetailPage({ params }: { params: { id: string } }) {
-  const profile = mockProfile;
+  if (!profiles.length) {
+    notFound();
+  }
+
+  const currentUserProfile = profiles[0]; 
+
+  const profile = profiles.find((p) => p.id === profileId);
+  if (!profile) {
+    notFound();
+  }
+
+  const compatibilityScore = calculateCompatibility(currentUserProfile, profile);
+
+  const firstName = profile.name.split(' ')[0];
+
   return (
     <Container className="py-4">
     <Row className="mb-3">
@@ -46,70 +40,69 @@ export default function profileDetailPage({ params }: { params: { id: string } }
       </Row>
 
       <Row>
-        {/* Left column – main profile info */}
+        {/* Left column */}
         <Col md={8} className="mb-4">
           <Card>
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <div>
                   <Card.Title className="mb-1">{profile.name}</Card.Title>
+                  <div className="d-flex flex-wrap gap-2 mt-2">
+                    <Badge bg="light" text="dark">
+                      Budget: ${profile.budget}
+                    </Badge>
+                    <Badge bg="light" text="dark">
+                      Housing: {profile.housingPreference}
+                    </Badge>
+                    <Badge bg="light" text="dark">
+                      Location: {profile.locationPreference}
+                    </Badge>
+                  </div>
                 </div>
+
                 <div className="text-end">
-                  <div className="fw-bold">Compatibility Score</div>
-                  <div className="d-flex align-items-center gap-2">
-                    <div style={{ minWidth: '80px' }}>
-                      <ProgressBar
-                        now={profile.compatabilityScore}
-                        label={`${profile.compatabilityScore}%`}
-                      />
-                    </div>
+                  <div className="fw-bold small text-muted mb-1">Compatibility Score</div>
+                  <div style={{ minWidth: '140px'}}>
+                    <ProgressBar
+                      now={profile.compatabilityScore}
+                      label={`${profile.compatabilityScore}%`}
+                    />
                   </div>
                 </div>
               </div>
 
               <hr />
 
-              <Row className="mb-3">
-                <Col md={6}>
-                  <ListGroup variant="flush">
-                    <ListGroup.Item>
-                      <strong>Budget:</strong> {profile.budget}
-                    </ListGroup.Item>
-                  </ListGroup>
+              <Row className="align-items-start">
+                <Col md={4} className="mb-3 mb-md-0">
                   <Image
-                      src="/images/johndoe.jpg"
+                      src={profile.image ?? '/images/johndoe.jpg'}
+                      alt={profile.name}
                       rounded
                       style={{
                          width: '100%',
-                         maxHeight: '200px',
-                         objectFit: 'contain',
+                         maxHeight: '100%',
+                         objectFit: 'cover',
                       }}
                   />
                 </Col>
-                <Col md={6}>
-                  <ListGroup variant="flush">
-                    <ListGroup.Item>
-                      <strong>Housing Preference:</strong> {profile.housingPreference}
-                    </ListGroup.Item>
-                    <ListGroup.Item>
-                      <strong>Location Preference:</strong> {profile.locationPreference}
-                    </ListGroup.Item>
-                  </ListGroup>
+                <Col md={8}>
+                  <h5 className="mb-2">About {profile.name.split(' ')[0]}</h5>
+                  <p className="mb-3">{profile.description}</p>
+
+                  <h6 className="mb-2">Preferences</h6>
+                  <ul className="mb-0 list-unstyled small">
+                    <li><strong>Cleanliness:</strong> {profile.clean}</li>
+                    <li><strong>Sleep Schedule:</strong> {profile.sleep}</li>
+                    <li><strong>Study Habits:</strong> {profile.study}</li>
+                    <li><strong>Social Life:</strong> {profile.social}</li>
+                  </ul>
                 </Col>
               </Row>
-
-              <h5>About {profile.name.split(' ')[0]}</h5>
-              <p>{profile.description}</p>
-              <ul>
-                  <li>Cleanliness: {profile.clean}</li>
-                  <li>Sleep Schedule: {profile.sleep}</li>
-                  <li>Study Habits: {profile.study}</li>
-                  <li>Social Life: {profile.social}</li>
-              </ul>
             </Card.Body>
           </Card>
         </Col>
-
+          
         {/* Right column – actions */}
         <Col md={4}>
           <Card>
@@ -125,7 +118,7 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                   </Button>
                 </Link>
                 <Link href="/meetings" passHref legacyBehavior>
-                  <Button variant="outline-primary">
+                <Button variant="outline-primary">
                     Schedule Meeting
                   </Button>
                 </Link>
