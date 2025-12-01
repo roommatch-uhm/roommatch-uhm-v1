@@ -88,10 +88,11 @@ export default function Navbar() {
             {/* PROFILE DROPDOWN */}
             <li className="nav-item dropdown ms-3 position-relative">
               <button
+                id="profile-button"
                 type="button"
                 className="px-3 py-2 fw-semibold shadow-sm text-white"
                 style={{
-                  backgroundColor: '#116530', // UH Green
+                  backgroundColor: '#116530',
                   border: 'none',
                   borderRadius: '8px',
                 }}
@@ -104,8 +105,8 @@ export default function Navbar() {
                   : 'My Account'}
               </button>
 
-              {/* DROPDOWN */}
               <ul
+                id="profile-dropdown"
                 className={
                   'dropdown-menu dropdown-menu-end mt-2 ' +
                   (profileOpen ? 'show' : '')
@@ -119,17 +120,19 @@ export default function Navbar() {
                   </li>
                 )}
 
-                <li>
-                  <Link
-                    href="/auth/signup"
-                    className="dropdown-item"
-                    onClick={closeProfile}
-                  >
-                    Create Profile
-                  </Link>
-                </li>
+                {!session && (
+                  <li>
+                    <Link
+                      href="/auth/signup"
+                      className="dropdown-item"
+                      onClick={closeProfile}
+                    >
+                      Create Account
+                    </Link>
+                  </li>
+                )}
 
-                <li><hr className="dropdown-divider" /></li>
+                {session && <li><hr className="dropdown-divider" /></li>}
 
                 {session ? (
                   <li>
