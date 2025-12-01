@@ -310,7 +310,7 @@ function MessagesPageContent() {
   );
 }
 
-export default function MessagesPage(props) {
+export default function MessagesPage(props: { [key: string]: any }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <MessagesPageContent {...props} />
