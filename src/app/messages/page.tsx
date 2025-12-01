@@ -191,7 +191,7 @@ function MessagesPageContent() {
                 style={{ cursor: 'pointer', transition: '0.2s' }}
               >
                 <Image
-                  src={profile?.image || otherMember?.image || '/default-avatar.png'}
+                  src={profile?.image || otherMember?.image || '/uploads/default.jpg'}
                   alt={
                     profile?.profileName ||
                     profile?.name ||
