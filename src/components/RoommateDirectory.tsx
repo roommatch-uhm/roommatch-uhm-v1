@@ -306,18 +306,41 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
       <h1 className="mb-4">Roommate Listings</h1>
 
       {/* Filters container with a tasteful blue tint */}
-      <div
-        style={{
+      <div className="filters-wrap" style={{
           background: 'linear-gradient(180deg,#f8fbff,#ffffff)',
           border: '1px solid rgba(59,130,246,0.12)',
           borderRadius: 12,
           padding: 14,
           marginBottom: 18,
           boxShadow: '0 8px 22px rgba(59,130,246,0.04)',
-        }}
-      >
-        <Row className="align-items-center">
-          <Col md={4} className="mb-2">
+        }}>
+        <style>{`
+          .filters-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+          .filters-row > .col { padding-left: 0; padding-right: 0; }
+          .search-col { min-width: 220px; flex: 1 1 240px; }
+          .budget-col { flex: 2 1 420px; min-width: 280px; }
+          .social-col { min-width: 200px; flex: 1 1 220px; display: flex; justify-content: flex-end; }
+          .budget-controls { display: flex; gap: 12px; align-items: center; width: 100%; }
+          .budget-controls .dual-range-wrap { flex: 1; }
+          .reset-wrap { margin-left: 12px; }
+          /* Dropdown menu tweaks (desktop) */
+          .dropdown-menu.custom-social { min-width: 240px; max-height: 300px; overflow-y: auto; padding: 12px 20px 18px 22px; box-sizing: border-box; }
+
+          /* Responsive: stack on small screens */
+          @media (max-width: 767px) {
+            .filters-wrap { padding: 10px; }
+            .filters-row { flex-direction: column; align-items: stretch; gap: 10px; }
+            .search-col, .budget-col, .social-col { min-width: 0; flex: 1 1 100%; }
+            .social-col { justify-content: flex-start; }
+            .budget-controls { flex-direction: column; align-items: stretch; gap: 8px; }
+            .reset-wrap { margin-left: 0; margin-top: 6px; display: flex; justify-content: flex-start; }
+            .dropdown-menu.custom-social { left: 0 !important; right: auto !important; width: calc(100% - 8px); min-width: 0; }
+            .dropdown-toggle.no-caret { width: 100%; justify-content: space-between; }
+          }
+        `}</style>
+
+        <Row className="filters-row">
+          <Col md={4} className="mb-2 search-col">
             {/* search with subtle blue accent and icon */}
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <div
@@ -355,8 +378,8 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
             </div>
           </Col>
 
-          <Col md={5} className="mb-2">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Col md={5} className="mb-2 budget-col">
+            <div className="budget-controls">
               <div style={{ width: 140 }}>
                 <div style={{ fontSize: 13, color: '#2563eb', fontWeight: 600 }}>Budget range</div>
                 <div style={{ fontSize: 13, color: '#475569', marginTop: 8 }}>
@@ -364,7 +387,7 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
                 </div>
               </div>
 
-              <div style={{ flex: 1 }}>
+              <div className="dual-range-wrap" style={{ flex: 1 }}>
                 {/* REPLACED: custom DualRange component */}
                 <DualRange
                   min={minAvailable}
@@ -378,7 +401,7 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
                 />
               </div>
 
-              <div style={{ marginLeft: 12 }}>
+              <div className="reset-wrap">
                  <Button
                    variant="outline-primary"
                    size="sm"
@@ -393,8 +416,8 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
             </div>
           </Col>
 
-          <Col md={3} className="mb-2">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <Col md={3} className="mb-2 social-col">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 8, height: 8, borderRadius: 99, background: '#3b82f6', boxShadow: '0 4px 10px rgba(59,130,246,0.14)' }} />
                 <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 500 }}>Social filter</div>
@@ -436,23 +459,15 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
                   </span>
                 </Dropdown.Toggle>
 
-                <Dropdown.Menu
+                <Dropdown.Menu className="custom-social"
                   style={{
                     minWidth: 240,
-                    paddingTop: 12,
-                    paddingLeft: 22,
-                    paddingRight: 20,
-                    paddingBottom: 18,               // ensure space at bottom so "Done" isn't cut off
                     background: 'linear-gradient(180deg,#f8fbff,#ffffff)',
                     borderRadius: 8,
                     border: '1px solid rgba(59,130,246,0.06)',
                     boxSizing: 'border-box',
-                    maxHeight: 300,                  // allow more room and scrolling
-                    overflowY: 'auto',
-                    overflowX: 'hidden',             // prevent horizontal overflow that causes cut-off
-                    right: 0,                         // align menu to the right edge of the toggle to avoid clipping
-                    left: 'auto',
-                    zIndex: 1050,                     // ensure it sits above surrounding elements
+                    overflowX: 'hidden',
+                    zIndex: 1050,
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingRight: 6 }}>
