@@ -5,7 +5,7 @@ export default function LandingPage() {
   return (
     <main>
       {/* Hero Section */}
-      <section className="py-5" style={{ minHeight: '600px' }}>
+      <section className="py-5 bg-white">
         <div className="container">
           <div className="row align-items-center">
             <div className="col-lg-6">
@@ -43,6 +43,7 @@ export default function LandingPage() {
               maxHeight: '500px',
               objectFit: 'cover',
               borderRadius: '0',
+              display: 'block',
             }}
           />
         </div>
@@ -56,15 +57,15 @@ export default function LandingPage() {
           <div className="row g-5">
             {/* Create a Profile */}
             <div className="col-md-4">
-              <div className="text-start">
-                <div className="mb-4">
+              <div className="text-center">
+                <div className="mb-4 d-flex justify-content-center">
                   <img
                     src="/images/create-pfp.png"
                     alt="Create a Profile"
                     style={{
                       width: '100px',
                       height: '100px',
-                      objectFit: 'contain',
+                      objectFit: 'cover',
                     }}
                   />
                 </div>
@@ -77,15 +78,15 @@ export default function LandingPage() {
 
             {/* Find Compatible Roommates */}
             <div className="col-md-4">
-              <div className="text-start">
-                <div className="mb-4">
+              <div className="text-center">
+                <div className="mb-4 d-flex justify-content-center">
                   <img
                     src="/images/puzzle.jpg"
                     alt="Find Compatible Roommates"
                     style={{
                       width: '100px',
                       height: '100px',
-                      objectFit: 'contain',
+                      objectFit: 'cover',
                     }}
                   />
                 </div>
@@ -98,15 +99,15 @@ export default function LandingPage() {
 
             {/* Connect and Explore Options */}
             <div className="col-md-4">
-              <div className="text-start">
-                <div className="mb-4">
+              <div className="text-center">
+                <div className="mb-4 d-flex justify-content-center">
                   <img
                     src="/images/connect.png"
                     alt="Connect and Explore Options"
                     style={{
                       width: '100px',
                       height: '100px',
-                      objectFit: 'contain',
+                      objectFit: 'cover',
                     }}
                   />
                 </div>
@@ -170,7 +171,7 @@ export default function LandingPage() {
               >
                 <div className="card-body p-4">
                   <p className="mb-4" style={{ fontSize: '1rem' }}>
-                    "Met someone super compatible with my lifestyl..."
+                    "I was finally able to find someone super compatible with my lifestyle!"
                   </p>
                   <div className="d-flex align-items-center">
                     <img
@@ -204,7 +205,7 @@ export default function LandingPage() {
               >
                 <div className="card-body p-4">
                   <p className="mb-4" style={{ fontSize: '1rem' }}>
-                    "We are literally the same person. Can't believe we m..."
+                    "We are literally the same person. Can't believe we met through this app!"
                   </p>
                   <div className="d-flex align-items-center">
                     <img
@@ -230,6 +231,25 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="py-5 bg-white">
+        <div className="container text-center">
+          <h2 className="h3 fw-bold mb-2">
+            Ready to Find Your Perfect Roommate?
+          </h2>
+          <p className="mb-3" style={{ fontSize: '0.95rem', color: '#6c757d' }}>
+            Join RoomMatch UHM today and connect with compatible students at UH Mānoa
+          </p>
+          <Link
+            href="/auth/signup"
+            className="btn btn-dark px-4 py-2"
+            style={{ borderRadius: '8px', fontSize: '0.95rem' }}
+          >
+            Get Started Now
+          </Link>
         </div>
       </section>
     </main>
