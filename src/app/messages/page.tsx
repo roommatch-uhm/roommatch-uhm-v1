@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -39,7 +40,7 @@ function getOtherMember(chat: Chat | null, userId: number | undefined) {
   return chat?.members?.find((m) => String(m.id) !== String(userId));
 }
 
-export default function MessagesPage() {
+function MessagesPageContent() {
   const { data: session, status } = useSession();
   const rawUserId = (session?.user as { id?: number | string } | undefined)?.id;
   const userId: number | undefined =
@@ -57,7 +58,6 @@ export default function MessagesPage() {
   const searchParams = useSearchParams();
   const chatIdParam = searchParams?.get('chatId');
 
-  // Helper to fetch chats
   const fetchChats = () => {
     if (!userId) return;
     fetch('/api/chats', {
@@ -95,11 +95,9 @@ export default function MessagesPage() {
       });
   }, [activeChat?.id, userId]);
 
-  // Fetch the profile for the other member whenever activeChat changes
   useEffect(() => {
     const otherMember = getOtherMember(activeChat, userId);
     if (otherMember) {
-      // Fetch profile by userId (fixed route)
       fetch(`/api/profiles/by-user/${otherMember.id}`)
         .then(res => res.json())
         .then(profile => setOtherProfile(profile))
@@ -109,7 +107,6 @@ export default function MessagesPage() {
     }
   }, [activeChat, userId]);
 
-  // Fetch profiles for all sidebar chats whenever chats change
   useEffect(() => {
     const fetchProfiles = async () => {
       const profiles: Record<number, { name: string; image?: string; profileName?: string }> = {};
@@ -117,7 +114,6 @@ export default function MessagesPage() {
         const otherMember = getOtherMember(chat, userId);
         if (otherMember && !profiles[otherMember.id]) {
           try {
-            // Fetch profile by userId (fixed route)
             const res = await fetch(`/api/profiles/by-user/${otherMember.id}`);
             if (res.ok) {
               const profile = await res.json();
@@ -173,7 +169,6 @@ export default function MessagesPage() {
   return (
     <div className="container-fluid vh-100 bg-light p-0">
       <div className="row h-100">
-        {/* Sidebar */}
         <div className="col-md-3 border-end bg-white p-3 overflow-auto">
           <h4 className="fw-bold mb-4" style={{ color: '#000' }}>Chats</h4>
           {chats.map((chat) => {
@@ -222,9 +217,7 @@ export default function MessagesPage() {
           })}
         </div>
 
-        {/* Chat window */}
         <div className="col-md-9 d-flex flex-column p-0">
-          {/* Header */}
           {activeChat && (
             <div className="d-flex align-items-center bg-white border-bottom p-3 shadow-sm">
               <Image
@@ -254,7 +247,6 @@ export default function MessagesPage() {
             </div>
           )}
 
-          {/* Messages */}
           <div
             className="flex-grow-1 p-4 overflow-auto"
             style={{ backgroundColor: '#f0f4fa' }}
@@ -287,7 +279,6 @@ export default function MessagesPage() {
             ))}
           </div>
 
-          {/* Message Input */}
           <div className="border-top bg-white p-3">
             <form onSubmit={sendMessage} className="d-flex gap-2">
               <input
@@ -316,5 +307,13 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage(props) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MessagesPageContent {...props} />
+    </Suspense>
   );
 }
