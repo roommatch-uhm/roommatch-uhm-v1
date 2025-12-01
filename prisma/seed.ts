@@ -16,7 +16,8 @@ async function main() {
 
     console.log(`  Creating user: ${account.UHemail} with role: ${role}`);
 
-    await prisma.user.upsert({
+    // Upsert user and get the created/updated user object (including its id)
+    const user = await prisma.user.upsert({
       where: { UHemail: account.UHemail },
       update: {},
       create: {
@@ -28,6 +29,30 @@ async function main() {
         preferences: account.preferences || '',
         roommateStatus: account.roommateStatus || 'Looking',
         budget: account.budget ?? null,
+      },
+    });
+
+    // Upsert profile for this user using the correct user.id
+    // Cast to `any` to avoid strict Prisma create input requirements in this seed script;
+    // for production, provide all required profile fields or update the Prisma schema.
+    await prisma.profile.upsert({
+      where: { userId: user.id },
+      update: {},
+        create: {
+        userId: user.id,
+        image: account.image || null,
+        name: (
+          [account.firstName, account.lastName].filter(Boolean).join(' ').trim() ||
+          (account as any).displayName ||
+          account.UHemail ||
+          'Unknown'
+        ),
+        description: account.description || '',
+        clean: account.clean || '',
+        budget: account.budget ?? null,
+        social: account.social || '',
+        study: account.study || '',
+        sleep: account.sleep || '',
       },
     });
   });

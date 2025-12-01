@@ -23,18 +23,20 @@ enum Role {
 }
 
 model User {
-  id             Int      @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   firstName      String
   lastName       String
-  UHemail        String   @unique
+  UHemail        String    @unique
   password       String
-  role           Role     @default(USER)
+  role           Role      @default(USER)
   preferences    String?
   roommateStatus String
   budget         Float?
   answers        Answer[]
   profile        Profile? // optional because a user may not have a profile yet
-  meetings        Meeting[]   // Needed for Meetings feature
+  meetings       Meeting[] // Needed for Meetings feature
+  chats          Chat[]    @relation("ChatMembers")
+  sentMessages   Message[] @relation("UserSentMessages")
 }
 
 // Model for storing questions
@@ -71,10 +73,27 @@ model Profile {
 }
 
 model Meeting {
+  id     Int      @id @default(autoincrement())
+  userId Int
+  date   DateTime
+  time   String
+  title  String
+  user   User     @relation(fields: [userId], references: [id])
+}
+
+model Chat {
+  id        Int       @id @default(autoincrement())
+  members   User[]    @relation("ChatMembers")
+  messages  Message[]
+  createdAt DateTime  @default(now())
+}
+
+model Message {
   id        Int      @id @default(autoincrement())
-  userId    Int
-  date      DateTime
-  time      String
-  title     String
-  user      User     @relation(fields: [userId], references: [id])
+  chatId    Int
+  senderId  Int
+  content   String
+  timestamp DateTime @default(now())
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  sender    User     @relation("UserSentMessages", fields: [senderId], references: [id])
 }

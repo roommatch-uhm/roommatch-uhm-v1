@@ -9,7 +9,13 @@
       "role": "ADMIN",
       "preferences": "Prefers a clean, quiet environment. Non-smoker.",
       "roommateStatus": "Looking",
-      "budget": 1000.00
+      "budget": 1000.00,
+      "image": "/images/bob.png",
+      "description": "I like building things.",
+      "clean": "Very clean",
+      "social": "Moderate",
+      "study": "Focused",
+      "sleep": "Early riser"
     },
     {
       "id": 2,

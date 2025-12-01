@@ -150,3 +150,67 @@ export async function updateUserProfile(userId: number, updates: {
     data,
   });
 }
+
+// Create a new chat between two users
+export async function createChat(userId1: number, userId2: number) {
+  const user1 = await prisma.user.findUnique({ where: { id: userId1 } });
+  const user2 = await prisma.user.findUnique({ where: { id: userId2 } });
+  if (!user1 || !user2) {
+    throw new Error('One or both users not found');
+  }
+
+  // Check if a chat already exists between these two users
+  const existingChat = await prisma.chat.findFirst({
+    where: {
+      AND: [
+        { members: { some: { id: userId1 } } },
+        { members: { some: { id: userId2 } } },
+      ],
+    },
+    include: { members: true },
+  });
+
+  if (existingChat) {
+    return existingChat; // Do not create duplicate chat
+  }
+
+  // Create new chat
+  return prisma.chat.create({
+    data: {
+      members: {
+        connect: [{ id: userId1 }, { id: userId2 }],
+      },
+    },
+    include: { members: true },
+  });
+}
+
+// Send a message in a chat
+export async function sendMessage(chatId: number, senderId: number, content: string) {
+  // Check if sender is a member of the chat
+  const chat = await prisma.chat.findUnique({
+    where: { id: chatId },
+    include: { members: true },
+  });
+  if (!chat || !chat.members.some(u => u.id === senderId)) {
+    throw new Error('Not authorized');
+  }
+  return prisma.message.create({
+    data: { chatId, senderId, content },
+  });
+}
+
+// Get all messages for a chat (authorization)
+export async function getChatMessages(chatId: number, userId: number) {
+  const chat = await prisma.chat.findUnique({
+    where: { id: chatId },
+    include: { members: true },
+  });
+  if (!chat || !chat.members.some(u => u.id === userId)) {
+    throw new Error('Not authorized');
+  }
+  return prisma.message.findMany({
+    where: { chatId },
+    orderBy: { timestamp: 'asc' },
+  });
+}

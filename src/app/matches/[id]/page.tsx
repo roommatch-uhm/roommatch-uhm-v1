@@ -1,10 +1,14 @@
 'use client';
 
 import { Container, Row, Col, Card, ListGroup, Badge, Button, ProgressBar, Image } from 'react-bootstrap';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 
 type Profile = {
     id: number;
+    userId: number;
     image: string | null;
     name: string;
     description: string;
@@ -13,28 +17,54 @@ type Profile = {
     social: string;
     study: string;
     sleep: string;
-    compatabilityScore: number;
+    compatibilityScore: number;
     housingPreference: string;
     locationPreference: string;
 };
 
-const mockProfile: Profile = {
-    id: 1,
-    image: "/images/johndoe.jpg",
-    name: "John Doe",
-    description: "A friendly and tidy roommate looking for a place near campus.",
-    compatabilityScore: 85,
-    budget: 700,
-    clean: "Very Clean",
-    social: "Moderately Social",
-    study: "Focused",
-    sleep: "Early Riser",
-    housingPreference: "Apartment",
-    locationPreference: "<5 minutes from Campus",
-}
-
 export default function profileDetailPage({ params }: { params: { id: string } }) {
-  const profile = mockProfile;
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  // Get your own userId from session
+  const rawUserId = (session?.user as { id?: number | string } | undefined)?.id;
+  const myUserId: number | undefined =
+    typeof rawUserId === 'number'
+      ? rawUserId
+      : rawUserId
+      ? parseInt(String(rawUserId), 10)
+      : undefined;
+
+  // Fetch the profile based on params.id
+  useEffect(() => {
+    async function fetchProfile() {
+      const res = await fetch(`/api/profiles/${params.id}`);
+      const data = await res.json();
+      setProfile(data);
+    }
+    fetchProfile();
+  }, [params.id]);
+
+  // Handler for starting a chat and redirecting
+  const handleMessage = async () => {
+    if (!myUserId || !profile) {
+      alert('You must be signed in to send messages.');
+      return;
+    }
+    // Create a new chat (or get existing one)
+    const res = await fetch('/api/chats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId1: myUserId, userId2: profile.userId }),
+    });
+    const chat = await res.json();
+    // Redirect to messages page with the new chat's ID
+    router.push(`/messages?chatId=${chat.id}`);
+  };
+
+  if (!profile) return <div>Loading...</div>;
+
   return (
     <Container className="py-4">
     <Row className="mb-3">
@@ -59,8 +89,8 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                   <div className="d-flex align-items-center gap-2">
                     <div style={{ minWidth: '80px' }}>
                       <ProgressBar
-                        now={profile.compatabilityScore}
-                        label={`${profile.compatabilityScore}%`}
+                        now={profile.compatibilityScore}
+                        label={`${profile.compatibilityScore}%`}
                       />
                     </div>
                   </div>
@@ -77,7 +107,7 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                     </ListGroup.Item>
                   </ListGroup>
                   <Image
-                      src="/images/johndoe.jpg"
+                      src={profile.image || '/images/default.jpg'}
                       rounded
                       style={{
                          width: '100%',
@@ -119,11 +149,9 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                 Start a conversation or schedule a time to meet and talk about housing options.
               </Card.Text>
               <div className="d-grid gap-2">
-                <Link href="/messages" passHref legacyBehavior>
-                  <Button variant="primary">
-                    Message
-                  </Button>
-                </Link>
+                <Button variant="primary" onClick={handleMessage}>
+                  Message
+                </Button>
                 <Link href="/meetings" passHref legacyBehavior>
                   <Button variant="outline-primary">
                     Schedule Meeting
