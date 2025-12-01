@@ -436,8 +436,26 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
                   </span>
                 </Dropdown.Toggle>
 
-                <Dropdown.Menu style={{ minWidth: 220, padding: 12, background: 'linear-gradient(180deg,#f8fbff,#ffffff)', borderRadius: 8, border: '1px solid rgba(59,130,246,0.06)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <Dropdown.Menu
+                  style={{
+                    minWidth: 240,
+                    paddingTop: 12,
+                    paddingLeft: 22,
+                    paddingRight: 20,
+                    paddingBottom: 18,               // ensure space at bottom so "Done" isn't cut off
+                    background: 'linear-gradient(180deg,#f8fbff,#ffffff)',
+                    borderRadius: 8,
+                    border: '1px solid rgba(59,130,246,0.06)',
+                    boxSizing: 'border-box',
+                    maxHeight: 300,                  // allow more room and scrolling
+                    overflowY: 'auto',
+                    overflowX: 'hidden',             // prevent horizontal overflow that causes cut-off
+                    right: 0,                         // align menu to the right edge of the toggle to avoid clipping
+                    left: 'auto',
+                    zIndex: 1050,                     // ensure it sits above surrounding elements
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingRight: 6 }}>
                     <strong style={{ fontSize: 13 }}>Filter</strong>
                     <Button
                       variant="link"
@@ -450,24 +468,31 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
                   </div>
 
                   {SOCIAL_OPTIONS.map((opt) => (
-                    <Form.Check
-                      key={opt}
-                      type="checkbox"
-                      id={`social-${opt}`}
-                      label={opt}
-                      checked={socialFilter.includes(opt)}
-                      onChange={() => toggleSocial(opt)}
-                      style={{
-                        marginBottom: 6,
-                        padding: '6px 8px',
-                        borderRadius: 6,
-                        background: socialFilter.includes(opt) ? 'rgba(59,130,246,0.06)' : 'transparent',
-                      }}
-                    />
+                    <div key={opt} style={{ marginBottom: 6 }}>
+                      <Form.Check
+                        type="checkbox"
+                        id={`social-${opt}`}
+                        label={opt}
+                        checked={socialFilter.includes(opt)}
+                        onChange={() => toggleSocial(opt)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          padding: '6px 8px',
+                          borderRadius: 6,
+                          background: socialFilter.includes(opt) ? 'rgba(59,130,246,0.06)' : 'transparent',
+                          boxSizing: 'border-box',
+                          whiteSpace: 'normal',
+                          overflowWrap: 'break-word',
+                          width: '100%',
+                        }}
+                      />
+                    </div>
                   ))}
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                    <Button size="sm" variant="primary" onClick={() => setSocialOpen(false)}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8, paddingBottom: 8 }}>
+                    <Button size="sm" variant="primary" onClick={() => setSocialOpen(false)} style={{ padding: '6px 10px' }}>
                       Done
                     </Button>
                   </div>
