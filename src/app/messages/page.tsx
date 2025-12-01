@@ -98,9 +98,12 @@ function MessagesPageContent() {
   useEffect(() => {
     const otherMember = getOtherMember(activeChat, userId);
     if (otherMember) {
-      fetch(`/api/profiles/by-user/${otherMember.id}`)
+      fetch(`/api/profiles/${otherMember.id}`)
         .then(res => res.json())
-        .then(profile => setOtherProfile(profile))
+        .then(profile => {
+          console.log('Fetched profile for chat header:', profile);
+          setOtherProfile(profile);
+        })
         .catch(() => setOtherProfile(null));
     } else {
       setOtherProfile(null);
@@ -114,9 +117,10 @@ function MessagesPageContent() {
         const otherMember = getOtherMember(chat, userId);
         if (otherMember && !profiles[otherMember.id]) {
           try {
-            const res = await fetch(`/api/profiles/by-user/${otherMember.id}`);
+            const res = await fetch(`/api/profiles/${otherMember.id}`);
             if (res.ok) {
               const profile = await res.json();
+              console.log('Fetched profile for sidebar:', profile);
               profiles[otherMember.id] = profile;
             }
           } catch {
@@ -169,11 +173,14 @@ function MessagesPageContent() {
   return (
     <div className="container-fluid vh-100 bg-light p-0">
       <div className="row h-100">
+        {/* Sidebar */}
         <div className="col-md-3 border-end bg-white p-3 overflow-auto">
           <h4 className="fw-bold mb-4" style={{ color: '#000' }}>Chats</h4>
           {chats.map((chat) => {
             const otherMember = getOtherMember(chat, userId);
             const profile = otherMember ? sidebarProfiles[otherMember.id] : null;
+            const imageToShow = profile?.image || otherMember?.image || '/uploads/default.jpg';
+            console.log('Sidebar image for chat', chat.id, ':', imageToShow); // Log the image path
             return (
               <div
                 key={chat.id}
@@ -191,7 +198,7 @@ function MessagesPageContent() {
                 style={{ cursor: 'pointer', transition: '0.2s' }}
               >
                 <Image
-                  src={profile?.image || otherMember?.image || '/uploads/default.jpg'}
+                  src={imageToShow}
                   alt={
                     profile?.profileName ||
                     profile?.name ||
@@ -217,6 +224,7 @@ function MessagesPageContent() {
           })}
         </div>
 
+        {/* Chat window */}
         <div className="col-md-9 d-flex flex-column p-0">
           {activeChat && (
             <div className="d-flex align-items-center bg-white border-bottom p-3 shadow-sm">
@@ -224,7 +232,7 @@ function MessagesPageContent() {
                 src={
                   otherProfile?.image ||
                   getOtherMember(activeChat, userId)?.image ||
-                  '/default-avatar.png'
+                  '/uploads/default.jpg'
                 }
                 alt={
                   otherProfile?.profileName ||
@@ -247,6 +255,7 @@ function MessagesPageContent() {
             </div>
           )}
 
+          {/* Messages */}
           <div
             className="flex-grow-1 p-4 overflow-auto"
             style={{ backgroundColor: '#f0f4fa' }}
@@ -279,6 +288,7 @@ function MessagesPageContent() {
             ))}
           </div>
 
+          {/* Message Input */}
           <div className="border-top bg-white p-3">
             <form onSubmit={sendMessage} className="d-flex gap-2">
               <input
