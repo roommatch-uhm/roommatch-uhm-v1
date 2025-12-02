@@ -2,8 +2,6 @@
   "defaultAccounts": [
     {
       "id": 1,
-      "firstName": "Bob",
-      "lastName": "The-Builder",
       "UHemail": "admin@hawaii.edu",
       "password": "changeme1",
       "role": "ADMIN",
@@ -19,8 +17,6 @@
     },
     {
       "id": 2,
-      "firstName": "John",
-      "lastName": "Doe",
       "UHemail": "john@hawaii.edu",
       "password": "changeme2",
       "role": "USER",
@@ -30,8 +26,6 @@
     },
     {
       "id": 3,
-      "firstName": "Jane",
-      "lastName": "Smith",
       "UHemail": "jane@hawaii.edu",
       "password": "changeme3",
       "role": "USER",
@@ -41,8 +35,6 @@
     },
     {
       "id": 4,
-      "firstName": "Milo",
-      "lastName": "Smith",
       "UHemail": "milo@hawaii.edu",
       "password": "changeme4",
       "role": "USER",

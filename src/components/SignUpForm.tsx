@@ -62,8 +62,6 @@ export default function SignUpForm() {
       await createUserProfile({
         UHemail: data.email,
         password: data.password,
-        firstName: '',
-        lastName: '',
         budget: 0,
         roommateStatus: 'Looking',
       });

@@ -86,16 +86,12 @@ export async function createUserProfile({
   role,
   roommateStatus,
   budget,
-  firstName,
-  lastName,
 }: {
   UHemail: string;
   password: string;
   role?: Role;
   roommateStatus?: string;
   budget: number;
-  firstName: string;
-  lastName: string;
 }) {
   // Validate password security requirements on server-side
   const passwordValidation = validatePassword(password);
@@ -124,9 +120,7 @@ export async function createUserProfile({
       password: hashedPassword,
       role: role || Role.USER,
       roommateStatus: roommateStatus || 'Looking',
-      budget, // Ensure budget is included
-      firstName, // Add firstName
-      lastName, // Add lastName
+      budget,
     },
   });
 
@@ -150,8 +144,6 @@ export async function changeUserPassword(UHemail: string, newPassword: string) {
 }
 
 export async function updateUserProfile(userId: number, updates: {
-  firstName?: string;
-  lastName?: string;
   UHemail?: string;
   password?: string;
   role?: Role;
