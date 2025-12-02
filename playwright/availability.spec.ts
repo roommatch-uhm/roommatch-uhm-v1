@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-let testUserId: number;
-let testProfileId: number;
-let testUserEmail: string;
+let testUserId = 0;
+let testProfileId = 0;
+let testUserEmail = '';
 let testUserPassword = 'testpassword';
 
 test.beforeAll(async ({ request }) => {
-  // Use a unique email for each test run to avoid conflicts
   testUserEmail = `testuser+${Date.now()}@hawaii.edu`;
+
+  // Create user via API
   const userRes = await request.post('/api/users', {
     data: {
       UHemail: testUserEmail,
@@ -17,14 +18,11 @@ test.beforeAll(async ({ request }) => {
       budget: 999.99,
     },
   });
-
-  if (!userRes.ok()) {
-    throw new Error(`Failed to create test user: ${userRes.status()} ${await userRes.text()}`);
-  }
+  if (!userRes.ok()) throw new Error(`Failed to create test user: ${userRes.status()} ${await userRes.text()}`);
   const user = await userRes.json();
   testUserId = user.id;
 
-  // Create a test profile for that user
+  // Create profile via API
   const profileRes = await request.post('/api/profiles', {
     data: {
       userId: testUserId,
@@ -38,23 +36,17 @@ test.beforeAll(async ({ request }) => {
       sleep: 'Early Bird',
     },
   });
-
-  if (!profileRes.ok()) {
-    throw new Error(`Failed to create test profile: ${profileRes.status()} ${await profileRes.text()}`);
-  }
+  if (!profileRes.ok()) throw new Error(`Failed to create test profile: ${profileRes.status()} ${await profileRes.text()}`);
   const profile = await profileRes.json();
   testProfileId = profile.id;
 });
 
 test.afterAll(async ({ request }) => {
-  // Find all test users by email pattern
   const usersRes = await request.get('/api/users?emailPattern=testuser');
   const users = await usersRes.json();
 
   for (const user of users) {
-    // Delete associated profile(s) if needed
     await request.delete(`/api/profiles/by-user/${user.id}`);
-    // Delete user
     await request.delete(`/api/users/${user.id}`);
   }
 });
