@@ -3,6 +3,7 @@
 // Import Prisma client and types
 import { PrismaClient, Role } from '@prisma/client';
 import { hash } from 'bcrypt';
+import { validatePassword } from './passwordValidator';
 
 const prisma = new PrismaClient();
 
@@ -96,6 +97,14 @@ export async function createUserProfile({
   firstName: string;
   lastName: string;
 }) {
+  // Validate password security requirements on server-side
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    throw new Error(
+      `Password does not meet security requirements: ${passwordValidation.errors.join(', ')}`,
+    );
+  }
+
   // Check if the user already exists
   const existingUser = await prisma.user.findUnique({
     where: { UHemail },
@@ -125,6 +134,14 @@ export async function createUserProfile({
 }
 
 export async function changeUserPassword(UHemail: string, newPassword: string) {
+  // Validate password security requirements on server-side
+  const passwordValidation = validatePassword(newPassword);
+  if (!passwordValidation.isValid) {
+    throw new Error(
+      `Password does not meet security requirements: ${passwordValidation.errors.join(', ')}`,
+    );
+  }
+
   const hashedPassword = await hash(newPassword, 10);
   return prisma.user.update({
     where: { UHemail },
@@ -143,6 +160,13 @@ export async function updateUserProfile(userId: number, updates: {
 }) {
   const data: any = { ...updates };
   if (updates.password) {
+    // Validate password security requirements on server-side
+    const passwordValidation = validatePassword(updates.password);
+    if (!passwordValidation.isValid) {
+      throw new Error(
+        `Password does not meet security requirements: ${passwordValidation.errors.join(', ')}`,
+      );
+    }
     data.password = await hash(updates.password, 10);
   }
   return prisma.user.update({

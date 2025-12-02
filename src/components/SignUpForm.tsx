@@ -7,6 +7,8 @@ import * as Yup from 'yup';
 import { Card, Col, Container, Button, Form, Row } from 'react-bootstrap';
 import { createUserProfile } from '@/lib/dbActions';
 import { useState } from 'react';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
+import { validatePassword } from '@/lib/passwordValidator';
 
 type SignUpFormData = {
   email: string;
@@ -24,7 +26,19 @@ export default function SignUpForm() {
       .matches(/@hawaii\.edu$/, 'Please use your @hawaii.edu email'),
     password: Yup.string()
       .required('Password is required')
-      .min(6, 'Password must be at least 6 characters'),
+      .test('password-strength', function (value) {
+        if (!value) return this.createError({ message: 'Password is required' });
+
+        const result = validatePassword(value);
+
+        if (!result.isValid) {
+          return this.createError({
+            message: result.errors[0] || 'Password does not meet security requirements',
+          });
+        }
+
+        return true;
+      }),
     confirmPassword: Yup.string()
       .required('Please confirm your password')
       .oneOf([Yup.ref('password')], 'Passwords must match'),
@@ -34,10 +48,14 @@ export default function SignUpForm() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<SignUpFormData>({
     resolver: yupResolver(validationSchema),
   });
+
+  // Watch password field for real-time strength indicator
+  const watchedPassword = watch('password') || '';
 
   const onSubmit = async (data: SignUpFormData) => {
     try {
@@ -89,6 +107,13 @@ export default function SignUpForm() {
                       className={errors.password ? 'is-invalid' : ''}
                     />
                     <div className="invalid-feedback">{errors.password?.message}</div>
+
+                    {/* Password Strength Indicator */}
+                    {watchedPassword && (
+                      <div className="mt-3">
+                        <PasswordStrengthIndicator password={watchedPassword} />
+                      </div>
+                    )}
                   </Form.Group>
 
                   <Form.Group className="mb-3">
