@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
+
+const testUserEmail = `testuser+${randomUUID()}@hawaii.edu`;
 
 // GET: Search users by email pattern for test cleanup
 export async function GET(req: Request) {
@@ -23,7 +26,7 @@ export async function POST(req: Request) {
     // No password hashing
     const user = await prisma.user.create({ data });
     return NextResponse.json(user);
-  } catch (error: unknown) {
+  } catch (error) {
     console.error(error);
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: message }, { status: 500 });
