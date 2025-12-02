@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 // GET: Search users by email pattern for test cleanup
 export async function GET(req: Request) {
@@ -17,12 +18,14 @@ export async function GET(req: Request) {
 
 // POST: Create a new user
 export async function POST(req: Request) {
-  const data = await req.json();
-  // Hash password if needed (uncomment if your auth expects it)
-  // import bcrypt from 'bcryptjs';
-  // if (data.password) {
-  //   data.password = await bcrypt.hash(data.password, 10);
-  // }
-  const user = await prisma.user.create({ data });
-  return NextResponse.json(user);
+  try {
+    const data = await req.json();
+    // No password hashing
+    const user = await prisma.user.create({ data });
+    return NextResponse.json(user);
+  } catch (error: unknown) {
+    console.error(error);
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

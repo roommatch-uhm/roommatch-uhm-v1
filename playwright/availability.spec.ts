@@ -119,7 +119,7 @@ test('Meetings page (calendar) is available', async ({ page }) => {
   await expect(page.getByText(/welcome|dashboard|home/i)).toBeVisible();
   // Now go to meetings page
   await page.goto('/meetings');
-  await expect(page.getByRole('heading', { name: /meetings/i })).toBeVisible();
+  await expect(page.locator('h2.page-title')).toHaveText(/My Meetings/i);
 });
 
 // Support page availability
