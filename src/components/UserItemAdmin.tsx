@@ -1,10 +1,8 @@
 import { User } from '@prisma/client';
 
 /* Renders a single row in the List Users table for admin view. */
-const UserItemAdmin = ({ id, firstName, lastName, UHemail, role, roommateStatus, budget }: User) => (
+const UserItemAdmin = ({ id, UHemail, role, roommateStatus, budget }: User) => (
   <tr>
-    <td>{firstName}</td>
-    <td>{lastName}</td>
     <td>{UHemail}</td>
     <td>{role}</td>
     <td>{roommateStatus}</td>
