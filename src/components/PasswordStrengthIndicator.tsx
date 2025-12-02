@@ -1,7 +1,38 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle, XCircle } from 'lucide-react';
+
+/**
+ * Simple inline SVG icon components to avoid dependency on 'lucide-react'.
+ * These mirror the usage of CheckCircle and XCircle in the component and accept
+ * standard SVG props (including className for styling).
+ */
+export const CheckCircle = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10" strokeWidth="2" />
+    <path d="M9 12l2 2 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const XCircle = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10" strokeWidth="2" />
+    <path d="M15 9l-6 6M9 9l6 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 import {
   validatePassword,
   getPasswordRequirements,
