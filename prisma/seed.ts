@@ -37,10 +37,7 @@ async function main() {
       create: {
         userId: user.id,
         image: account.image || null,
-        name: (
-          account.UHemail ||
-          'Unknown'
-        ),
+        name: account.name || 'Unknown', // <-- Use the name from JSON, not UHemail
         description: account.description || '',
         clean: account.clean || '',
         budget: account.budget ?? null,
