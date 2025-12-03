@@ -107,7 +107,7 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                     </ListGroup.Item>
                   </ListGroup>
                   <Image
-                      src={profile.image || '/images/default.jpg'}
+                      src={profile.image || '/uploads/default.jpg'}
                       rounded
                       style={{
                          width: '100%',

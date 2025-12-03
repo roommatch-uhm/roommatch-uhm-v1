@@ -22,8 +22,6 @@ async function main() {
       update: {},
       create: {
         UHemail: account.UHemail,
-        firstName: account.firstName || '',
-        lastName: account.lastName || '',
         password: hashedPassword,
         role,
         preferences: account.preferences || '',
@@ -33,20 +31,13 @@ async function main() {
     });
 
     // Upsert profile for this user using the correct user.id
-    // Cast to `any` to avoid strict Prisma create input requirements in this seed script;
-    // for production, provide all required profile fields or update the Prisma schema.
     await prisma.profile.upsert({
       where: { userId: user.id },
       update: {},
-        create: {
+      create: {
         userId: user.id,
         image: account.image || null,
-        name: (
-          [account.firstName, account.lastName].filter(Boolean).join(' ').trim() ||
-          (account as any).displayName ||
-          account.UHemail ||
-          'Unknown'
-        ),
+        name: account.name || 'Unknown', // <-- Use the name from JSON, not UHemail
         description: account.description || '',
         clean: account.clean || '',
         budget: account.budget ?? null,

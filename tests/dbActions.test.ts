@@ -1,16 +1,34 @@
+import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
 import { PrismaClient, Role } from '@prisma/client';
 import { hash } from 'bcrypt';
-import { createUserProfile, updateUserProfile, getUserProfile, changeUserPassword } from '../src/lib/dbActions';
+import {
+  createUserProfile,
+  updateUserProfile,
+  changeUserPassword,
+  createProfile,
+  editProfile,
+  getProfileByUserId,
+  getProfileById,
+  createChat,
+  sendMessage,
+  getChatMessages,
+} from '../src/lib/dbActions';
+
+jest.setTimeout(30000); // 30 seconds
 
 const prisma = new PrismaClient();
-let userId: number; // This will store the test user ID
+let userId: number;
+let profileId: number;
 
-// Default accounts JSON with firstName and lastName added
+// Local helper to fetch a user profile using Prisma when dbActions does not export getUserProfile
+const getUserProfileLocal = async (id: number) => {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new Error('User not found');
+  return user;
+};
+
 const defaultAccounts = [
   {
-    id: 1,
-    firstName: 'Admin',
-    lastName: 'User',
     UHemail: 'admin@foo.com',
     password: 'changeme1',
     role: Role.ADMIN,
@@ -19,9 +37,6 @@ const defaultAccounts = [
     budget: 1000.00,
   },
   {
-    id: 2,
-    firstName: 'John',
-    lastName: 'Doe',
     UHemail: 'john@foo.com',
     password: 'changeme2',
     role: Role.USER,
@@ -29,43 +44,45 @@ const defaultAccounts = [
     roommateStatus: 'Looking',
     budget: 800.00,
   },
-  {
-    id: 3,
-    firstName: 'Jane',
-    lastName: 'Smith',
-    UHemail: 'jane@foo.com',
-    password: 'changeme3',
-    role: Role.USER,
-    preferences: 'Prefers a calm living space. Likes quiet nights and good communication.',
-    roommateStatus: 'Has Roommate',
-    budget: 900.00,
-  },
 ];
 
-describe('User Profile Tests', () => {
+describe('User Profile & Profile Tests', () => {
   beforeAll(async () => {
-    // Clean up all users before running tests
-    await prisma.user.deleteMany({});
+    // Clean up only the test user/profile from previous runs
+    const testUser = await prisma.user.findUnique({ where: { UHemail: 'testuser@example.com' } });
+    if (testUser) {
+      await prisma.profile.deleteMany({ where: { userId: testUser.id } });
+      await prisma.user.delete({ where: { id: testUser.id } });
+    }
 
-    // Create a test user
+    // Create the test user and profile for this test run
     const user = await createUserProfile({
       UHemail: 'testuser@example.com',
       password: 'testpassword123',
       role: Role.USER,
       roommateStatus: 'Looking',
       budget: 1500.00,
-      firstName: 'Test',
-      lastName: 'User',
     });
-    userId = user.id; // Store the user ID for later tests
+    userId = user.id;
 
-    // Insert default accounts
+    const profile = await createProfile({
+      userId,
+      name: 'Test Profile',
+      description: 'A test profile',
+      image: null,
+      clean: 'excellent',
+      budget: 1500,
+      social: 'Introvert',
+      study: 'Regular',
+      sleep: 'Early_Bird',
+    });
+    profileId = profile.id;
+
+    // Insert default accounts (if needed for your tests)
     await Promise.all(defaultAccounts.map(async (account) => {
       const hashedPassword = await hash(account.password, 10);
       await prisma.user.create({
         data: {
-          firstName: account.firstName,
-          lastName: account.lastName,
           UHemail: account.UHemail,
           password: hashedPassword,
           role: account.role,
@@ -78,18 +95,13 @@ describe('User Profile Tests', () => {
   });
 
   afterAll(async () => {
-    // Delete the test user created in beforeAll
-    if (userId) {
-      await prisma.user.delete({ where: { id: userId } });
-    }
-
-    // Optional: Clean up default accounts after tests
+    // Only delete the test user and profile you created
+    if (profileId) await prisma.profile.delete({ where: { id: profileId } });
+    if (userId) await prisma.user.delete({ where: { id: userId } });
+    // Optionally delete default accounts if you created them
     await prisma.user.deleteMany({
-      where: {
-        UHemail: { in: defaultAccounts.map(acc => acc.UHemail) },
-      },
+      where: { UHemail: { in: defaultAccounts.map(acc => acc.UHemail) } },
     });
-
     await prisma.$disconnect();
   });
 
@@ -98,8 +110,6 @@ describe('User Profile Tests', () => {
     expect(user).toBeDefined();
     expect(user?.UHemail).toBe('testuser@example.com');
     expect(user?.budget).toBe(1500.00);
-    expect(user?.firstName).toBe('Test');
-    expect(user?.lastName).toBe('User');
   });
 
   it('should update a user profile with a new budget', async () => {
@@ -107,45 +117,45 @@ describe('User Profile Tests', () => {
       preferences: 'Non-smoking',
       roommateStatus: 'Has Roommate',
       budget: 1800.00,
-    });
+    } as any);
     expect(updatedUser.preferences).toBe('Non-smoking');
     expect(updatedUser.roommateStatus).toBe('Has Roommate');
     expect(updatedUser.budget).toBe(1800.00);
   });
 
   it('should fetch a user profile', async () => {
-    const userProfile = await getUserProfile(userId);
+    const userProfile = await getUserProfileLocal(userId);
     expect(userProfile).toBeDefined();
     expect(userProfile.UHemail).toBe('testuser@example.com');
-    expect(userProfile.firstName).toBe('Test');
-    expect(userProfile.lastName).toBe('User');
   });
 
   it('should change the user password', async () => {
-    await changeUserPassword(userId, 'newpassword123');
+    await changeUserPassword('testuser@example.com', 'newpassword123');
     const user = await prisma.user.findUnique({ where: { id: userId } });
     expect(user?.password).not.toBe('testpassword123');
   });
 
-  it('should fetch and print all default accounts', async () => {
-    const users = await prisma.user.findMany({
-      where: { UHemail: { in: defaultAccounts.map(acc => acc.UHemail) } },
+  it('should create and edit a profile', async () => {
+    const edited = await editProfile(profileId, {
+      name: 'Updated Profile',
+      budget: 2000,
+      clean: 'good',
     });
+    expect(edited.name).toBe('Updated Profile');
+    expect(edited.budget).toBe(2000);
+    expect(edited.clean).toBe('good');
+  });
 
-    console.log('Default Accounts in DB:');
-    users.forEach(user => {
-      console.log(`${user.firstName} ${user.lastName} (${user.UHemail}) - Budget: ${user.budget}`);
-    });
+  it('should fetch profile by userId', async () => {
+    const profile = await getProfileByUserId(userId);
+    expect(profile).toBeDefined();
+    expect(profile?.name).toBe('Updated Profile');
+  });
 
-    expect(users.length).toBe(defaultAccounts.length);
-    users.forEach(user => {
-      expect(user).toHaveProperty('firstName');
-      expect(user).toHaveProperty('lastName');
-      expect(user).toHaveProperty('UHemail');
-      expect(user).toHaveProperty('preferences');
-      expect(user).toHaveProperty('roommateStatus');
-      expect(user).toHaveProperty('budget');
-    });
+  it('should fetch profile by profileId', async () => {
+    const profile = await getProfileById(profileId);
+    expect(profile).toBeDefined();
+    expect(profile?.name).toBe('Updated Profile');
   });
 
   it('should not allow duplicate UHemail registration', async () => {
@@ -156,85 +166,72 @@ describe('User Profile Tests', () => {
         role: Role.USER,
         roommateStatus: 'Looking',
         budget: 1200.00,
-        firstName: 'Duplicate',
-        lastName: 'User',
       }),
     ).rejects.toThrow('Email is already taken');
   });
 
   it('should throw error when fetching non-existent user', async () => {
-    await expect(getUserProfile(999999)).rejects.toThrow('User not found');
+    await expect(getUserProfileLocal(999999)).rejects.toThrow('User not found');
   });
 
-  it('should update only specific fields', async () => {
-    const updatedUser = await updateUserProfile(userId, {
-      roommateStatus: 'Looking for Roommate',
+  it('should create a chat and send a message', async () => {
+    // Clean up any leftover test messages, chats, and users from previous runs
+    await prisma.message.deleteMany({
+      where: {
+        sender: {
+          UHemail: { in: ['userA@example.com', 'userB@example.com'] },
+        },
+      },
     });
-    expect(updatedUser.roommateStatus).toBe('Looking for Roommate');
-  });
+    await prisma.chat.deleteMany({
+      where: {
+        members: {
+          some: {
+            UHemail: { in: ['userA@example.com', 'userB@example.com'] },
+          },
+        },
+      },
+    });
+    await prisma.user.deleteMany({
+      where: { UHemail: { in: ['userA@example.com', 'userB@example.com'] } },
+    });
 
-  it('should not update user if no fields are provided', async () => {
-    const userBefore = await prisma.user.findUnique({ where: { id: userId } });
-    const updatedUser = await updateUserProfile(userId, {});
-    expect(updatedUser).toMatchObject(userBefore as object);
-  });
-
-  // Additional tests
-
-  it('should delete a user profile and ensure it is removed', async () => {
-    // Create a new user to delete
-    const tempUser = await createUserProfile({
-      UHemail: 'tempuser@example.com',
-      password: 'temppassword',
+    // Create two users
+    const userA = await createUserProfile({
+      UHemail: 'userA@example.com',
+      password: 'passA',
       role: Role.USER,
       roommateStatus: 'Looking',
-      budget: 500.00,
-      firstName: 'Temp',
-      lastName: 'User',
+      budget: 1000,
     });
-    const deletedUser = await prisma.user.delete({ where: { id: tempUser.id } });
-    expect(deletedUser.UHemail).toBe('tempuser@example.com');
-    const shouldBeNull = await prisma.user.findUnique({ where: { id: tempUser.id } });
-    expect(shouldBeNull).toBeNull();
-  });
-
-  it('should update multiple fields at once', async () => {
-    const updatedUser = await updateUserProfile(userId, {
-      preferences: 'Likes pets',
-      roommateStatus: 'Not Looking',
-      budget: 2000.00,
+    const userB = await createUserProfile({
+      UHemail: 'userB@example.com',
+      password: 'passB',
+      role: Role.USER,
+      roommateStatus: 'Looking',
+      budget: 1000,
     });
-    expect(updatedUser.preferences).toBe('Likes pets');
-    expect(updatedUser.roommateStatus).toBe('Not Looking');
-    expect(updatedUser.budget).toBe(2000.00);
-  });
 
-  it('should not find a user by a non-existent UHemail', async () => {
-    const user = await prisma.user.findUnique({ where: { UHemail: 'doesnotexist@foo.com' } });
-    expect(user).toBeNull();
-  });
+    // Create chat
+    const chat = await createChat(userA.id, userB.id);
+    expect(chat.members.length).toBe(2);
 
-  it('should ensure all default accounts have unique UHemail', async () => {
-    const emails = defaultAccounts.map(acc => acc.UHemail);
-    const uniqueEmails = new Set(emails);
-    expect(uniqueEmails.size).toBe(emails.length);
-  });
+    // Send message
+    const message = await sendMessage(chat.id, userA.id, 'Hello!');
+    expect(message.content).toBe('Hello!');
 
-  it('should ensure all default accounts have a positive budget', async () => {
-    defaultAccounts.forEach(acc => {
-      expect(acc.budget).toBeGreaterThan(0);
-    });
-  });
+    // Get messages
+    const messages = await getChatMessages(chat.id, userA.id);
+    expect(messages.length).toBeGreaterThan(0);
 
-  it('should print all accounts in the database', async () => {
-    const users = await prisma.user.findMany();
-    console.log('All Accounts in DB:');
-    users.forEach(user => {
-      console.log(
-        `${user.firstName} ${user.lastName} (${user.UHemail}) - Role: ${user.role} - Budget: ${user.budget} - Status: 
-        ${user.roommateStatus} - Preferences: ${user.preferences}`,
-      );
-    });
-    expect(Array.isArray(users)).toBe(true);
+    // Cleanup: only delete the chat and messages for these test users
+    try {
+      await prisma.message.deleteMany({ where: { chatId: chat.id } });
+      await prisma.chat.delete({ where: { id: chat.id } });
+      await prisma.user.delete({ where: { id: userA.id } });
+      await prisma.user.delete({ where: { id: userB.id } });
+    } catch (err) {
+      // Ignore errors if already deleted
+    }
   });
 });

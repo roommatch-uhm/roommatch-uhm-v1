@@ -10,6 +10,7 @@ export async function GET() {
 // POST: Create a new profile
 export async function POST(req: Request) {
   const data = await req.json();
+  console.log('Received POST data:', data); // <-- Log incoming data for debugging
   const profile = await prisma.profile.create({ data });
   return NextResponse.json(profile);
 }

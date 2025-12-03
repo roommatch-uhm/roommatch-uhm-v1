@@ -16,7 +16,7 @@ async function main() {
       profile = await prisma.profile.create({
         data: {
           userId: user.id,
-          name: `${user.firstName} ${user.lastName}`, // optional default
+          name: user.UHemail, // Use UHemail or a default string, since firstName/lastName do not exist
           description: 'No description yet.',
           clean: 'Unknown',
           budget: user.budget ?? 0,

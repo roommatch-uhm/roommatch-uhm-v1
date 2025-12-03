@@ -1,7 +1,6 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -16,14 +15,13 @@ interface Meeting {
   date: string;
   time: string;
   title: string;
+  profileName?: string;
 }
 
 export default function MeetingsPage() {
   const { data: session, status } = useSession();
 
-  if (status === 'loading') return <p className="text-center mt-5">Loading...</p>;
-  if (!session) redirect('/auth/signin');
-
+  // All hooks at the top
   const [value, setValue] = useState<Value>(new Date());
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -33,6 +31,18 @@ export default function MeetingsPage() {
     date: '',
     time: '',
   });
+
+  // Only redirect on the client, after hydration
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      window.location.replace('/auth/signin');
+    }
+  }, [status]);
+
+  // Only render content if authenticated
+  if (status !== 'authenticated') {
+    return null;
+  }
 
   // Fetch meetings from backend when session changes
   useEffect(() => {

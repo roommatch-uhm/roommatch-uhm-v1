@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -39,7 +40,17 @@ function getOtherMember(chat: Chat | null, userId: number | undefined) {
   return chat?.members?.find((m) => String(m.id) !== String(userId));
 }
 
-export default function MessagesPage() {
+function sortChatsByRecentMessage(chats: Chat[]) {
+  return [...chats].sort((a, b) => {
+    const lastA = a.messages?.[a.messages.length - 1];
+    const lastB = b.messages?.[b.messages.length - 1];
+    const timeA = lastA ? new Date(lastA.timestamp).getTime() : 0;
+    const timeB = lastB ? new Date(lastB.timestamp).getTime() : 0;
+    return timeB - timeA;
+  });
+}
+
+function MessagesPageContent() {
   const { data: session, status } = useSession();
   const rawUserId = (session?.user as { id?: number | string } | undefined)?.id;
   const userId: number | undefined =
@@ -54,10 +65,11 @@ export default function MessagesPage() {
   const [otherProfile, setOtherProfile] = useState<{ name: string; image?: string; profileName?: string } | null>(null);
   const [sidebarProfiles, setSidebarProfiles] = useState<Record<number, { name: string; image?: string; profileName?: string }>>({});
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   const searchParams = useSearchParams();
   const chatIdParam = searchParams?.get('chatId');
 
-  // Helper to fetch chats
   const fetchChats = () => {
     if (!userId) return;
     fetch('/api/chats', {
@@ -65,7 +77,7 @@ export default function MessagesPage() {
     })
       .then(res => res.json())
       .then(data => {
-        setChats(data);
+        setChats(sortChatsByRecentMessage(data));
         if (data.length > 0 && chatIdParam) {
           const foundChat = data.find((chat: Chat) => String(chat.id) === String(chatIdParam));
           if (foundChat) {
@@ -95,21 +107,21 @@ export default function MessagesPage() {
       });
   }, [activeChat?.id, userId]);
 
-  // Fetch the profile for the other member whenever activeChat changes
   useEffect(() => {
     const otherMember = getOtherMember(activeChat, userId);
     if (otherMember) {
-      // Fetch profile by userId (fixed route)
-      fetch(`/api/profiles/by-user/${otherMember.id}`)
+      fetch(`/api/profiles/${otherMember.id}`)
         .then(res => res.json())
-        .then(profile => setOtherProfile(profile))
+        .then(profile => {
+          console.log('Fetched profile for chat header:', profile);
+          setOtherProfile(profile);
+        })
         .catch(() => setOtherProfile(null));
     } else {
       setOtherProfile(null);
     }
   }, [activeChat, userId]);
 
-  // Fetch profiles for all sidebar chats whenever chats change
   useEffect(() => {
     const fetchProfiles = async () => {
       const profiles: Record<number, { name: string; image?: string; profileName?: string }> = {};
@@ -117,10 +129,10 @@ export default function MessagesPage() {
         const otherMember = getOtherMember(chat, userId);
         if (otherMember && !profiles[otherMember.id]) {
           try {
-            // Fetch profile by userId (fixed route)
-            const res = await fetch(`/api/profiles/by-user/${otherMember.id}`);
+            const res = await fetch(`/api/profiles/${otherMember.id}`);
             if (res.ok) {
               const profile = await res.json();
+              console.log('Fetched profile for sidebar:', profile);
               profiles[otherMember.id] = profile;
             }
           } catch {
@@ -176,9 +188,33 @@ export default function MessagesPage() {
         {/* Sidebar */}
         <div className="col-md-3 border-end bg-white p-3 overflow-auto">
           <h4 className="fw-bold mb-4" style={{ color: '#000' }}>Chats</h4>
-          {chats.map((chat) => {
+
+          <input
+            type ="text"
+            className="form-control mb-3 rounded-pill"
+            placeholder="Search chats..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          {chats
+          .filter((chat) => {
             const otherMember = getOtherMember(chat, userId);
             const profile = otherMember ? sidebarProfiles[otherMember.id] : null;
+            const name = 
+              profile?.profileName ||
+              profile?.name ||
+              otherMember?.profileName ||
+              otherMember?.firstName ||
+              '';
+
+            return name.toLowerCase().includes(searchTerm.toLowerCase());
+          }) 
+          .map((chat) => {
+            const otherMember = getOtherMember(chat, userId);
+            const profile = otherMember ? sidebarProfiles[otherMember.id] : null;
+            const imageToShow = profile?.image || otherMember?.image || '/uploads/default.jpg';
+            console.log('Sidebar image for chat', chat.id, ':', imageToShow); // Log the image path
             return (
               <div
                 key={chat.id}
@@ -196,7 +232,7 @@ export default function MessagesPage() {
                 style={{ cursor: 'pointer', transition: '0.2s' }}
               >
                 <Image
-                  src={profile?.image || otherMember?.image || '/default-avatar.png'}
+                  src={imageToShow}
                   alt={
                     profile?.profileName ||
                     profile?.name ||
@@ -224,14 +260,13 @@ export default function MessagesPage() {
 
         {/* Chat window */}
         <div className="col-md-9 d-flex flex-column p-0">
-          {/* Header */}
           {activeChat && (
             <div className="d-flex align-items-center bg-white border-bottom p-3 shadow-sm">
               <Image
                 src={
                   otherProfile?.image ||
                   getOtherMember(activeChat, userId)?.image ||
-                  '/default-avatar.png'
+                  '/uploads/default.jpg'
                 }
                 alt={
                   otherProfile?.profileName ||
@@ -316,5 +351,13 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MessagesPageContent />
+    </Suspense>
   );
 }
