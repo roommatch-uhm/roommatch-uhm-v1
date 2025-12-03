@@ -122,7 +122,7 @@ export async function editProfile(
   updates: {
     name?: string;
     description?: string;
-    imageUrl?: string | null;
+    imageUrl?: string | null; // <-- use imageUrl
     imageKey?: string | null;
     clean?: 'excellent' | 'good' | 'fair' | 'poor';
     budget?: number | null;
@@ -174,7 +174,7 @@ export async function createUserProfile({
   password: string;
   role?: Role;
   roommateStatus?: string;
-  budget: number;
+  budget?: number;
 }) {
   // Validate password security requirements on server-side
   const passwordValidation = validatePassword(password);
@@ -184,18 +184,16 @@ export async function createUserProfile({
     );
   }
 
-  // Check if the user already exists
-  const existingUser = await prisma.user.findFirst({
-    where: { 
-      OR: [{ UHemail }, { username }],
-    },
-  });
+  // Ensure email unique
+  const existingByEmail = await prisma.user.findUnique({ where: { UHemail } });
+  if (existingByEmail) {
+    throw new Error('Email is already taken');
+  }
 
-  if (existingUser) {
-    if (existingUser.UHemail === UHemail) {
-      throw new Error('Email is already taken');
-    }
-    if (existingUser.username === username) {
+  // Ensure username unique (only if provided)
+  if (username) {
+    const existingByUsername = await prisma.user.findUnique({ where: { username } as any });
+    if (existingByUsername) {
       throw new Error('Username is already taken');
     }
   }
@@ -204,12 +202,13 @@ export async function createUserProfile({
 
   const user = await prisma.user.create({
     data: {
-      username,
       UHemail,
+      username,
       password: hashedPassword,
-      role: role || Role.USER,
-      roommateStatus: roommateStatus || 'Looking',
-      budget,
+      role: role ?? Role.USER,
+      preferences: null,
+      roommateStatus: roommateStatus ?? 'Looking',
+      budget: budget ?? null,
     },
   });
 

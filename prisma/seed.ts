@@ -16,24 +16,14 @@ async function main() {
 
     console.log(`  Creating user: ${account.UHemail} with role: ${role}`);
 
-    // normalize fields from config (account shape may vary)
-    const {
-      firstName: accFirstName,
-      lastName: accLastName,
-      name: accName,
-      bio: accBio,
-      description: accDescription,
-      image: accImage,
-      budget: accBudget,
-    } = account as any;
-
     // Upsert user and get the created/updated user object (including its id)
     const user = await prisma.user.upsert({
       where: { UHemail: account.UHemail },
       update: {},
       create: {
         UHemail: account.UHemail,
-        username: account.username || account.UHemail.split('@')[0],
+        username: account.username || account.UHemail, // Add username field, fallback to UHemail if not present
+        // 'username' is not a field on the User model; keep names in the Profile record instead
         password: hashedPassword,
         role,
         preferences: account.preferences || '',
@@ -42,18 +32,13 @@ async function main() {
       },
     });
 
-    if (!user || !user.id) {
-      throw new Error(`Failed to create or find user for ${account.UHemail}`);
-    }
-    console.log(`  user.id = ${user.id}`);
-
     // Upsert profile for this user using the correct user.id
     await prisma.profile.upsert({
       where: { userId: user.id },
       update: {},
       create: {
         userId: user.id,
-        image: account.image || null,
+        imageUrl: account.image ?? null,
         name: account.name || 'Unknown', // <-- Use the name from JSON, not UHemail
         description: account.description || '',
         clean: account.clean || '',

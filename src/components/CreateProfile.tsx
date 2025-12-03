@@ -22,7 +22,7 @@ import ProfileImageUpload from '@/components/UploadImg';
 type FormValues = {
   name: string;
   description: string;
-  image?: string | null;
+  imageUrl?: string | null; // <-- use imageUrl
   clean: 'excellent' | 'good' | 'fair' | 'poor';
   budget?: number | null;
   social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
@@ -41,10 +41,10 @@ export default function CreateUserProfile() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(CreateProfileSchema),
-    defaultValues: { image: null, budget: 0 },
+    defaultValues: { imageUrl: null, budget: 0 },
   });
 
-  const selectedImage = watch('image');
+  const selectedImage = watch('imageUrl');
   const router = useRouter();
 
   if (status === 'loading') return <LoadingSpinner />;
@@ -86,7 +86,6 @@ export default function CreateUserProfile() {
   // ensure onSubmit is wired to the <Form> below and button is type="submit"
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    console.log('onSubmit fired, data=', data);
     const userIdStr = (session?.user as any)?.id;
     if (!userIdStr) {
       swal('Error', 'You must be logged in', 'error');
@@ -98,17 +97,13 @@ export default function CreateUserProfile() {
         ...data,
         userId: parseInt(userIdStr, 10),
         budget: Number(data.budget) || 0,
-        image: data.image ?? null,
+        imageUrl: data.imageUrl ?? null, // <-- pass imageUrl
       };
 
-      console.log('Submitting profile payload:', payload);
       const created = await createProfile(payload);
-      console.log('createProfile returned:', created);
-
       swal('Success', 'Your Profile has been saved', 'success', { timer: 1500 });
       router.push('/profile');
     } catch (err: any) {
-      console.error('createProfile error', err);
       swal('Error', err?.message || 'Failed to create profile', 'error');
     }
   };
@@ -240,10 +235,10 @@ export default function CreateUserProfile() {
                       <Form.Label>Profile Photo</Form.Label>
                       <ProfileImageUpload
                         onUpload={(url) =>
-                          setValue('image', url, { shouldValidate: true, shouldDirty: true })
+                          setValue('imageUrl', url, { shouldValidate: true, shouldDirty: true })
                         }
                       />
-                      <input type="hidden" {...register('image')} />
+                      <input type="hidden" {...register('imageUrl')} />
                     </Form.Group>
                   </Col>
                 </Row>

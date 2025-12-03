@@ -13,7 +13,8 @@ export async function GET(req: NextRequest, { params }: RouteParams): Promise<Ne
   const profile: Profile | null = await prisma.profile.findUnique({
     where: { id: Number(params.id) },
   });
-  console.log('API returning profile:', profile?.name, 'image:', profile?.image); // <-- This prints to your terminal
+  // Use imageUrl, not image (your schema uses imageUrl)
+  console.log('API returning profile:', profile?.name, 'imageUrl:', profile?.imageUrl);
   if (!profile) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(profile);
 }
