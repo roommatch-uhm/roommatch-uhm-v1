@@ -59,17 +59,20 @@ model Answer {
 }
 
 model Profile {
-  id          Int     @id @default(autoincrement())
-  userId      Int     @unique
-  user        User    @relation(fields: [userId], references: [id])
-  image       String?
-  name        String
-  description String
-  clean       String
-  budget      Float?
-  social      String
-  study       String
-  sleep       String
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  user         User     @relation(fields: [userId], references: [id]) // added opposite relation
+  imageUrl     String?
+  imageKey     String?
+  imageSource  String?
+  imageAddedAt DateTime?
+  name         String
+  description  String
+  clean        String
+  budget       Float?
+  social       String
+  study        String
+  sleep        String
 }
 
 model Meeting {

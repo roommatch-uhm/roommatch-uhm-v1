@@ -16,6 +16,17 @@ async function main() {
 
     console.log(`  Creating user: ${account.UHemail} with role: ${role}`);
 
+    // normalize fields from config (account shape may vary)
+    const {
+      firstName: accFirstName,
+      lastName: accLastName,
+      name: accName,
+      bio: accBio,
+      description: accDescription,
+      image: accImage,
+      budget: accBudget,
+    } = account as any;
+
     // Upsert user and get the created/updated user object (including its id)
     const user = await prisma.user.upsert({
       where: { UHemail: account.UHemail },
@@ -32,27 +43,31 @@ async function main() {
       },
     });
 
+    if (!user || !user.id) {
+      throw new Error(`Failed to create or find user for ${account.UHemail}`);
+    }
+    console.log(`  user.id = ${user.id}`);
+
     // Upsert profile for this user using the correct user.id
     // Cast to `any` to avoid strict Prisma create input requirements in this seed script;
     // for production, provide all required profile fields or update the Prisma schema.
     await prisma.profile.upsert({
       where: { userId: user.id },
       update: {},
-        create: {
-        userId: user.id,
-        image: account.image || null,
-        name: (
-          [account.firstName, account.lastName].filter(Boolean).join(' ').trim() ||
-          (account as any).displayName ||
-          account.UHemail ||
-          'Unknown'
-        ),
-        description: account.description || '',
-        clean: account.clean || '',
-        budget: account.budget ?? null,
-        social: account.social || '',
-        study: account.study || '',
-        sleep: account.sleep || '',
+      create: {
+        // connect explicitly to the existing user to avoid "nested connect" failures
+        user: { connect: { id: user.id } },
+        name: accName || `${accFirstName ?? ''} ${accLastName ?? ''}`.trim() || 'Unnamed',
+        // migrated from `image` -> store public URL and optional key/source
+        imageUrl: accImage ?? null,
+        imageKey: null,
+        imageSource: accImage ? 'seed' : null,
+        description: accBio ?? accDescription ?? '',
+        clean: 'good',
+        budget: accBudget ?? 800,
+        social: 'Ambivert',
+        study: 'Regular',
+        sleep: 'Flexible',
       },
     });
   });
