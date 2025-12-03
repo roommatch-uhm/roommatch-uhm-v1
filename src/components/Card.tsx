@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Card, Image } from 'react-bootstrap';
+import React from 'react';
 import { Profile } from '@prisma/client';
 
 const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
@@ -33,7 +34,13 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
     return src;
   };
 
-  const imgSrc = getImageSrc(profile.image ?? null);
+  // prefer explicit URLs, then any provided source, then fall back to imageKey storage endpoint or a default file
+  const imgCandidate =
+    profile.imageUrl ??
+    profile.imageSource ??
+    (profile.imageKey ? `/api/storage/${profile.imageKey}` : `/uploads/${profile.id}.png`);
+
+  const imgSrc = getImageSrc(imgCandidate);
 
   return (
     <Card className="w-100 mx-auto shadow-lg" style={{ borderRadius: 12, overflow: 'hidden' }}>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Card, Image } from 'react-bootstrap';
+import React from 'react';
 import { Profile } from '@prisma/client';
 
 interface RoommateCardProps {
@@ -25,7 +26,31 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
     return src;
   };
 
-  const imgSrc = getImageSrc(profile.image ?? null);
+  const imgSrc = getImageSrc(
+    profile.imageUrl ?? (profile.imageKey ? `/uploads/${profile.imageKey}` : null) ?? null
+  );
+
+  // Replace image rendering logic to prefer profile.imageUrl (Supabase) and fallback to local /uploads
+  const Avatar: React.FC<{ profile: Profile; size?: number }> = ({ profile, size = 64 }) => {
+    const src = getImageSrc(
+      profile.imageUrl ??
+        (profile.imageKey ? `/uploads/${profile.imageKey}` : null) ??
+        `/uploads/${profile.userId || profile.id}.png`
+    );
+    return (
+      <img
+        src={src}
+        alt={profile.name ?? 'avatar'}
+        style={{
+          width: size,
+          height: size,
+          objectFit: 'cover',
+          borderRadius: '50%',
+          background: '#f3f4f6',
+        }}
+      />
+    );
+  };
 
   return (
     <Card className="h-100">
