@@ -40,6 +40,16 @@ function getOtherMember(chat: Chat | null, userId: number | undefined) {
   return chat?.members?.find((m) => String(m.id) !== String(userId));
 }
 
+function sortChatsByRecentMessage(chats: Chat[]) {
+  return [...chats].sort((a, b) => {
+    const lastA = a.messages?.[a.messages.length - 1];
+    const lastB = b.messages?.[b.messages.length - 1];
+    const timeA = lastA ? new Date(lastA.timestamp).getTime() : 0;
+    const timeB = lastB ? new Date(lastB.timestamp).getTime() : 0;
+    return timeB - timeA;
+  });
+}
+
 function MessagesPageContent() {
   const { data: session, status } = useSession();
   const rawUserId = (session?.user as { id?: number | string } | undefined)?.id;
@@ -55,6 +65,8 @@ function MessagesPageContent() {
   const [otherProfile, setOtherProfile] = useState<{ name: string; image?: string; profileName?: string } | null>(null);
   const [sidebarProfiles, setSidebarProfiles] = useState<Record<number, { name: string; image?: string; profileName?: string }>>({});
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   const searchParams = useSearchParams();
   const chatIdParam = searchParams?.get('chatId');
 
@@ -65,7 +77,7 @@ function MessagesPageContent() {
     })
       .then(res => res.json())
       .then(data => {
-        setChats(data);
+        setChats(sortChatsByRecentMessage(data));
         if (data.length > 0 && chatIdParam) {
           const foundChat = data.find((chat: Chat) => String(chat.id) === String(chatIdParam));
           if (foundChat) {
@@ -176,7 +188,29 @@ function MessagesPageContent() {
         {/* Sidebar */}
         <div className="col-md-3 border-end bg-white p-3 overflow-auto">
           <h4 className="fw-bold mb-4" style={{ color: '#000' }}>Chats</h4>
-          {chats.map((chat) => {
+
+          <input
+            type ="text"
+            className="form-control mb-3 rounded-pill"
+            placeholder="Search chats..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          {chats
+          .filter((chat) => {
+            const otherMember = getOtherMember(chat, userId);
+            const profile = otherMember ? sidebarProfiles[otherMember.id] : null;
+            const name = 
+              profile?.profileName ||
+              profile?.name ||
+              otherMember?.profileName ||
+              otherMember?.firstName ||
+              '';
+
+            return name.toLowerCase().includes(searchTerm.toLowerCase());
+          }) 
+          .map((chat) => {
             const otherMember = getOtherMember(chat, userId);
             const profile = otherMember ? sidebarProfiles[otherMember.id] : null;
             const imageToShow = profile?.image || otherMember?.image || '/uploads/default.jpg';
