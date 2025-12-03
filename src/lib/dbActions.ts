@@ -3,6 +3,7 @@
 import { PrismaClient, Profile, Role } from '@prisma/client';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { hash } from 'bcrypt';
+import { validatePassword } from './passwordValidator';
 
 // safe global prisma singleton for dev
 declare global {
@@ -161,41 +162,54 @@ export async function getProfileById(profileId: number) {
 
 /* Optional: user creation helper (kept from your earlier code) */
 export async function createUserProfile({
+  username,
   UHemail,
   password,
   role,
   roommateStatus,
   budget,
-  firstName,
-  lastName,
 }: {
+  username: string;
   UHemail: string;
   password: string;
   role?: Role;
   roommateStatus?: string;
   budget: number;
-  firstName: string;
-  lastName: string;
 }) {
-  const existingUser = await prisma.user.findUnique({
-    where: { UHemail },
+  // Validate password security requirements on server-side
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    throw new Error(
+      `Password does not meet security requirements: ${passwordValidation.errors.join(', ')}`,
+    );
+  }
+
+  // Check if the user already exists
+  const existingUser = await prisma.user.findFirst({
+    where: { 
+      OR: [{ UHemail }, { username }],
+    },
   });
 
   if (existingUser) {
-    throw new Error('Email is already taken');
+    if (existingUser.UHemail === UHemail) {
+      throw new Error('Email is already taken');
+    }
+    if (existingUser.username === username) {
+      throw new Error('Username is already taken');
+    }
   }
 
   const hashedPassword = await hash(password, 10);
 
   const user = await prisma.user.create({
     data: {
+      username,
       UHemail,
       password: hashedPassword,
       role: role || Role.USER,
       roommateStatus: roommateStatus || 'Looking',
       budget,
-      firstName,
-      lastName,
     },
   });
 
@@ -203,6 +217,14 @@ export async function createUserProfile({
 }
 
 export async function changeUserPassword(UHemail: string, newPassword: string) {
+  // Validate password security requirements on server-side
+  const passwordValidation = validatePassword(newPassword);
+  if (!passwordValidation.isValid) {
+    throw new Error(
+      `Password does not meet security requirements: ${passwordValidation.errors.join(', ')}`,
+    );
+  }
+
   const hashedPassword = await hash(newPassword, 10);
   return prisma.user.update({
     where: { UHemail },
@@ -211,8 +233,7 @@ export async function changeUserPassword(UHemail: string, newPassword: string) {
 }
 
 export async function updateUserProfile(userId: number, updates: {
-  firstName?: string;
-  lastName?: string;
+  username?: string;
   UHemail?: string;
   password?: string;
   role?: Role;
@@ -221,6 +242,13 @@ export async function updateUserProfile(userId: number, updates: {
 }) {
   const data: any = { ...updates };
   if (updates.password) {
+    // Validate password security requirements on server-side
+    const passwordValidation = validatePassword(updates.password);
+    if (!passwordValidation.isValid) {
+      throw new Error(
+        `Password does not meet security requirements: ${passwordValidation.errors.join(', ')}`,
+      );
+    }
     data.password = await hash(updates.password, 10);
   }
   return prisma.user.update({

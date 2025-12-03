@@ -33,8 +33,7 @@ async function main() {
       update: {},
       create: {
         UHemail: account.UHemail,
-        firstName: account.firstName || '',
-        lastName: account.lastName || '',
+        username: account.username || account.UHemail.split('@')[0],
         password: hashedPassword,
         role,
         preferences: account.preferences || '',
@@ -49,25 +48,19 @@ async function main() {
     console.log(`  user.id = ${user.id}`);
 
     // Upsert profile for this user using the correct user.id
-    // Cast to `any` to avoid strict Prisma create input requirements in this seed script;
-    // for production, provide all required profile fields or update the Prisma schema.
     await prisma.profile.upsert({
       where: { userId: user.id },
       update: {},
       create: {
-        // connect explicitly to the existing user to avoid "nested connect" failures
-        user: { connect: { id: user.id } },
-        name: accName || `${accFirstName ?? ''} ${accLastName ?? ''}`.trim() || 'Unnamed',
-        // migrated from `image` -> store public URL and optional key/source
-        imageUrl: accImage ?? null,
-        imageKey: null,
-        imageSource: accImage ? 'seed' : null,
-        description: accBio ?? accDescription ?? '',
-        clean: 'good',
-        budget: accBudget ?? 800,
-        social: 'Ambivert',
-        study: 'Regular',
-        sleep: 'Flexible',
+        userId: user.id,
+        image: account.image || null,
+        name: account.name || 'Unknown', // <-- Use the name from JSON, not UHemail
+        description: account.description || '',
+        clean: account.clean || '',
+        budget: account.budget ?? null,
+        social: account.social || '',
+        study: account.study || '',
+        sleep: account.sleep || '',
       },
     });
   });

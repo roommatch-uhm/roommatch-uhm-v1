@@ -19,18 +19,18 @@ async function attachProfileNames<T extends { id: number }>(members: T[]): Promi
 export async function POST(req: Request) {
   const { userId1, userId2 } = await req.json();
 
-  // Fetch user names for logging
-  const user1 = await prisma.user.findUnique({ where: { id: userId1 } });
-  const user2 = await prisma.user.findUnique({ where: { id: userId2 } });
-
-  const user1Name = user1 ? `${user1.firstName} ${user1.lastName}` : 'Unknown';
-  const user2Name = user2 ? `${user2.firstName} ${user2.lastName}` : 'Unknown';
+  // Fetch user profiles for logging
+  const profile1 = await prisma.profile.findFirst({ where: { userId: userId1 } });
+  const profile2 = await prisma.profile.findFirst({ where: { userId: userId2 } });
 
   console.log(
-    `Trying to create chat with: ${userId1} (${user1Name}), ${userId2} (${user2Name})`
+    `Trying to create chat with: ${userId1} (${profile1?.name}), ${userId2} (${profile2?.name})`
   );
 
   try {
+    const user1 = await prisma.user.findUnique({ where: { id: userId1 } });
+    const user2 = await prisma.user.findUnique({ where: { id: userId2 } });
+
     if (!user1 || !user2) {
       console.error('One or both users not found:', { userId1, userId2 });
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -54,10 +54,8 @@ export async function POST(req: Request) {
       existingChat.members.some(m => m.id === userId1) &&
       existingChat.members.some(m => m.id === userId2)
     ) {
-      // Only reuse if the chat is exactly between these two users
       chat = existingChat;
     } else {
-      // Create a new chat if none exists
       chat = await prisma.chat.create({
         data: {
           members: {
