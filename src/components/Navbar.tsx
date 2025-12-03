@@ -101,8 +101,12 @@ export default function Navbar() {
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#116530')}
               >
                 {session
-                  ? `Hi, ${session.user?.name || session.user?.email?.split('@')[0]}`
-                  : 'My Account'}
+                ? `Hi, ${
+                  session.user?.username ||
+                  session.user?.name ||
+                  session.user?.email?.split('@')[0]
+                }`
+                : 'My Account'}
               </button>
 
               <ul
