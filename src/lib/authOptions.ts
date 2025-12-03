@@ -10,34 +10,40 @@ const authOptions: NextAuthOptions = {
   },
   providers: [
     CredentialsProvider({
-      name: 'Email and Password',
+      name: 'Login with Email or Username and Password',
       credentials: {
-        email: { label: 'Email', type: 'email', placeholder: 'john@foo.com' },
+        identifier: { label: 'Email/Username', type: 'text', placeholder: 'john or john@hawaii.com' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials.password) {
-          console.error('Missing email or password');
+        if (!credentials?.identifier || !credentials.password) {
+          console.error('Missing email/username or password');
           return null;
         }
-        // Find user by UHemail
-        const user = await prisma.user.findUnique({
-          where: { UHemail: credentials.email },
+        // Find user by identifier (email or username)
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { UHemail: credentials.identifier },
+              { username: credentials.identifier },
+            ],
+          },
         });
         if (!user) {
-          console.error(`User not found: ${credentials.email}`);
+          console.error(`User not found: ${credentials.identifier}`);
           return null;
         }
         // Compare hashed password
         const isPasswordValid = await compare(credentials.password, user.password);
         if (!isPasswordValid) {
-          console.error(`Invalid password for: ${credentials.email}`);
+          console.error(`Invalid password for: ${credentials.identifier}`);
           return null;
         }
         // Return user info for session
         return {
           id: `${user.id}`,
           email: user.UHemail,
+          username: user.username,
           role: user.role,
         };
       },
@@ -54,8 +60,9 @@ const authOptions: NextAuthOptions = {
     session: ({ session, token }) => ({
       ...session,
       user: {
-        ...session.user,
         id: token.id,
+        email: session.user?.email,
+        username: token.username,
         role: token.role,
       },
     }),
@@ -65,6 +72,7 @@ const authOptions: NextAuthOptions = {
         return {
           ...token,
           id: u.id,
+          username: u.username,
           role: u.role,
         };
       }
