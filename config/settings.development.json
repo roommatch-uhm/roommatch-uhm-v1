@@ -3,6 +3,7 @@
     {
       "id": 1,
       "UHemail": "admin@hawaii.edu",
+      "username": "admin1",
       "password": "changeme1",
       "role": "ADMIN",
       "preferences": "Prefers a clean, quiet environment. Non-smoker.",
@@ -19,6 +20,7 @@
     {
       "id": 2,
       "UHemail": "john@hawaii.edu",
+      "username": "john1",
       "password": "changeme2",
       "role": "USER",
       "preferences": "Looking for a roommate who enjoys social activities and is easy-going.",
@@ -35,6 +37,7 @@
     {
       "id": 3,
       "UHemail": "jane@hawaii.edu",
+      "username": "jane1",
       "password": "changeme3",
       "role": "USER",
       "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",
@@ -51,6 +54,7 @@
     {
       "id": 4,
       "UHemail": "milo@hawaii.edu",
+      "username": "milo1",
       "password": "changeme4",
       "role": "USER",
       "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",

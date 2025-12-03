@@ -11,6 +11,7 @@ import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 import { validatePassword } from '@/lib/passwordValidator';
 
 type SignUpFormData = {
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -20,6 +21,11 @@ export default function SignUpForm() {
   const [serverError, setServerError] = useState('');
 
   const validationSchema = Yup.object().shape({
+    username: Yup.string()
+      .required('Username is required')
+      .min(3, 'Username must be at least 3 characters')
+      .max(20, 'Username must be at most 20 characters')
+      .matches(/^[a-zA-Z0-9._-]+$/, 'Only letters, numbers, dots, underscores, and hyphens allowed'),
     email: Yup.string()
       .required('Email is required')
       .email('Invalid email format')
@@ -60,6 +66,7 @@ export default function SignUpForm() {
   const onSubmit = async (data: SignUpFormData) => {
     try {
       await createUserProfile({
+        username: data.username,
         UHemail: data.email,
         password: data.password,
         budget: 0,
@@ -69,7 +76,7 @@ export default function SignUpForm() {
       alert('Account created successfully! Redirecting...');
       await signIn('credentials', {
         callbackUrl: '/profile',
-        email: data.email,
+        identifier: data.username || data.email,
         password: data.password,
       });
     } catch (error) {
@@ -87,6 +94,17 @@ export default function SignUpForm() {
             <Card>
               <Card.Body>
                 <Form onSubmit={handleSubmit(onSubmit)}>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Username</Form.Label>
+                    <Form.Control
+                      type="text"
+                      {...register('username')}
+                      className={errors.username ? 'is-invalid' : ''}
+                    />
+                    <div className="invalid-feedback">{errors.username?.message}</div>
+                  </Form.Group>
+
                   <Form.Group className="mb-3">
                     <Form.Label>Email</Form.Label>
                     <Form.Control

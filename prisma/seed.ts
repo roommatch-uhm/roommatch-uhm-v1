@@ -22,6 +22,7 @@ async function main() {
       update: {},
       create: {
         UHemail: account.UHemail,
+        username: account.username || account.UHemail.split('@')[0],
         password: hashedPassword,
         role,
         preferences: account.preferences || '',
