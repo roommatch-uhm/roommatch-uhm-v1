@@ -81,12 +81,14 @@ export async function getProfileById(profileId: number) {
 
 /* Optional: user creation helper (kept from your earlier code) */
 export async function createUserProfile({
+  username,
   UHemail,
   password,
   role,
   roommateStatus,
   budget,
 }: {
+  username: string;
   UHemail: string;
   password: string;
   role?: Role;
@@ -102,12 +104,19 @@ export async function createUserProfile({
   }
 
   // Check if the user already exists
-  const existingUser = await prisma.user.findUnique({
-    where: { UHemail },
+  const existingUser = await prisma.user.findFirst({
+    where: { 
+      OR: [{ UHemail }, { username }],
+    },
   });
 
   if (existingUser) {
-    throw new Error('Email is already taken');
+    if (existingUser.UHemail === UHemail) {
+      throw new Error('Email is already taken');
+    }
+    if (existingUser.username === username) {
+      throw new Error('Username is already taken');
+    }
   }
 
   // Hash the password before storing it
@@ -116,6 +125,7 @@ export async function createUserProfile({
   // Create a new user profile
   const user = await prisma.user.create({
     data: {
+      username,
       UHemail,
       password: hashedPassword,
       role: role || Role.USER,
@@ -144,6 +154,7 @@ export async function changeUserPassword(UHemail: string, newPassword: string) {
 }
 
 export async function updateUserProfile(userId: number, updates: {
+  username?: string;
   UHemail?: string;
   password?: string;
   role?: Role;
