@@ -16,17 +16,6 @@ async function main() {
 
     console.log(`  Creating user: ${account.UHemail} with role: ${role}`);
 
-    // normalize fields from config (account shape may vary)
-    const {
-      firstName: accFirstName,
-      lastName: accLastName,
-      name: accName,
-      bio: accBio,
-      description: accDescription,
-      image: accImage,
-      budget: accBudget,
-    } = account as any;
-
     // Upsert user and get the created/updated user object (including its id)
     const user = await prisma.user.upsert({
       where: { UHemail: account.UHemail },
@@ -41,11 +30,6 @@ async function main() {
         budget: account.budget ?? null,
       },
     });
-
-    if (!user || !user.id) {
-      throw new Error(`Failed to create or find user for ${account.UHemail}`);
-    }
-    console.log(`  user.id = ${user.id}`);
 
     // Upsert profile for this user using the correct user.id
     await prisma.profile.upsert({
@@ -77,3 +61,4 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
+  
