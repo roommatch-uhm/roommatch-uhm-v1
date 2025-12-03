@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import swal from 'sweetalert';
@@ -27,6 +27,7 @@ type FormValues = {
 export default function EditProfileForm({ profile }: { profile: Profile }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [uploading, setUploading] = useState(false);
 
   // normalize stored image path to ensure a usable URL (leading slash)
   const normalizeImageUrl = (img?: string | null) => {
@@ -37,7 +38,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     return src;
   };
 
-  const initialImageUrl = normalizeImageUrl(profile?.image ?? null);
+  const initialImageUrl = normalizeImageUrl(profile?.imageUrl ?? null);
 
   const {
     register,
@@ -51,7 +52,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     defaultValues: {
       name: profile?.name ?? '',
       description: profile?.description ?? '',
-      image: profile?.image ?? null,
+      image: profile?.imageUrl ?? null,
       clean: (profile?.clean as any) ?? 'good',
       budget: profile?.budget ?? 0,
       social: (profile?.social as any) ?? 'Unsure',
@@ -64,7 +65,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     reset({
       name: profile?.name ?? '',
       description: profile?.description ?? '',
-      image: profile?.image ?? null,
+      image: profile?.imageUrl ?? null,
       clean: (profile?.clean as any) ?? 'good',
       budget: profile?.budget ?? 0,
       social: (profile?.social as any) ?? 'Unsure',
@@ -101,6 +102,31 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     } catch (err: any) {
       console.error('editProfile error', err);
       swal('Error', err?.message || 'Failed to update profile', 'error');
+    }
+  };
+
+  // handler: upload to your server route which writes to Supabase and updates Prisma
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const userId = (session as any)?.user?.id;
+    if (!file || !userId) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('userId', String(userId));
+      const res = await fetch('/api/uploadProfileImage', { method: 'POST', body: fd });
+      const json = await res.json();
+      if (res.ok && json?.profile) {
+        // optionally navigate or refresh
+        router.refresh();
+      } else {
+        console.error('upload failed', json);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -281,7 +307,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                         reset({
                           name: profile.name,
                           description: profile.description,
-                          image: profile.image ?? null,
+                          image: profile.imageUrl ?? null,
                           clean: profile.clean as any,
                           budget: profile.budget ?? 0,
                           social: profile.social as any,
@@ -296,6 +322,8 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                   </Col>
                 </Row>
               </Form>
+
+              {/* File input handled by the ProfileImageUpload component above */}
             </Card.Body>
           </Card>
         </Col>

@@ -26,7 +26,10 @@ const DualRange: React.FC<{
   const trackRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef<'low' | 'high' | null>(null);
 
-  const valueToPercent = (val: number) => ((val - min) / (max - min)) * 100;
+  const valueToPercent = (val: number) => {
+    if (max === min) return 0;
+    return ((val - min) / (max - min)) * 100;
+  };
 
   const clamp = (v: number, a = min, b = max) => Math.min(Math.max(v, a), b);
 
@@ -40,7 +43,7 @@ const DualRange: React.FC<{
     if (!track || !draggingRef.current) return;
     const rect = track.getBoundingClientRect();
     const px = clamp(clientX, rect.left, rect.right) - rect.left;
-    const ratio = px / rect.width;
+    const ratio = rect.width > 0 ? px / rect.width : 0;
     const rawValue = min + ratio * (max - min);
     const snapped = clamp(snap(rawValue));
     if (draggingRef.current === 'low') {
@@ -57,11 +60,11 @@ const DualRange: React.FC<{
     const onTouchMove = (e: TouchEvent) => pointerMove(e.touches[0].clientX);
     const onPointerUp = () => {
       draggingRef.current = null;
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('touchend', onPointerUp);
     };
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('touchmove', onTouchMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('touchend', onPointerUp);
 
     return () => {
       window.removeEventListener('pointermove', onPointerMove);
@@ -73,24 +76,11 @@ const DualRange: React.FC<{
 
   const startDrag = (which: 'low' | 'high', e: React.PointerEvent | React.MouseEvent | React.TouchEvent) => {
     draggingRef.current = which;
-    const onPointerMove = (ev: PointerEvent) => pointerMove(ev.clientX);
-    const onTouchMove = (ev: TouchEvent) => pointerMove(ev.touches[0].clientX);
-    const onPointerUp = () => {
-      draggingRef.current = null;
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('touchend', onPointerUp);
-    };
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('touchmove', onTouchMove);
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('touchend', onPointerUp);
 
-    // If event is a touch or mouse, also handle immediate move to that position:
+    // handle immediate move to pointer location
     const clientX =
       'touches' in (e as any) ? (e as any).touches[0]?.clientX ?? 0 : (e as any).clientX ?? 0;
-    if (clientX) pointerMove(clientX);
+    if (clientX) pointerMove(clientX as number);
   };
 
   return (
@@ -122,6 +112,7 @@ const DualRange: React.FC<{
         {/* low handle */}
         <div
           role="slider"
+          aria-label="Minimum budget"
           aria-valuemin={min}
           aria-valuemax={max}
           aria-valuenow={low}
@@ -150,6 +141,7 @@ const DualRange: React.FC<{
         {/* high handle */}
         <div
           role="slider"
+          aria-label="Maximum budget"
           aria-valuemin={min}
           aria-valuemax={max}
           aria-valuenow={high}
@@ -190,6 +182,15 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
   const [socialFilter, setSocialFilter] = useState<string[]>([]);
   const [socialOpen, setSocialOpen] = useState(false);
 
+  // track small viewport to adjust dropdown alignment
+  const [isSmallViewport, setIsSmallViewport] = useState<boolean>(false);
+  useEffect(() => {
+    const update = () => setIsSmallViewport(typeof window !== 'undefined' ? window.innerWidth <= 767 : false);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
   // derive budget bounds from available profiles
   const { minAvailable, maxAvailable } = useMemo(() => {
     let min = Infinity;
@@ -207,7 +208,8 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
     // round to reasonable steps
     const floor = Math.floor(min / 100) * 100;
     const ceil = Math.ceil(max / 100) * 100;
-    return { minAvailable: Math.max(0, floor), maxAvailable: ceil };
+    // guard equal bounds
+    return { minAvailable: Math.max(0, floor), maxAvailable: Math.max(ceil, floor + 100) };
   }, [profiles]);
 
   // slider state (start at full range)
@@ -276,30 +278,17 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
   });
 
   // Sort by compatibility (highest first)
-  const sortedProfiles = [...filteredProfiles].sort(
-    (a, b) =>
-      calculateCompatibility(currentUserProfile, b) -
-      calculateCompatibility(currentUserProfile, a)
-  );
+  // convert Date fields to strings for the compatibility util (ProfileAnswers expects string|number|null)
+  const currentForCompat = {
+    ...currentUserProfile,
+    imageAddedAt: currentUserProfile.imageAddedAt ? currentUserProfile.imageAddedAt.toISOString() : null,
+  } as any;
 
-  // helper for rendering the dual-range track (visual only)
-  const trackStyle: React.CSSProperties = {
-    position: 'relative',
-    height: 8,
-    borderRadius: 8,
-    background: '#eef6ff',
-    marginTop: 8,
-    marginBottom: 6,
-  };
-
-  const activeFillStyle: React.CSSProperties = {
-    position: 'absolute',
-    left: `${((minBudget - minAvailable) / (maxAvailable - minAvailable)) * 100}%`,
-    right: `${100 - ((maxBudget - minAvailable) / (maxAvailable - minAvailable)) * 100}%`,
-    height: '100%',
-    background: 'linear-gradient(90deg,#bfdbfe,#60a5fa)',
-    borderRadius: 8,
-  };
+  const sortedProfiles = [...filteredProfiles].sort((a, b) => {
+    const aForCompat = { ...a, imageAddedAt: a.imageAddedAt ? a.imageAddedAt.toISOString() : null } as any;
+    const bForCompat = { ...b, imageAddedAt: b.imageAddedAt ? b.imageAddedAt.toISOString() : null } as any;
+    return calculateCompatibility(currentForCompat, bForCompat) - calculateCompatibility(currentForCompat, aForCompat);
+  });
 
   return (
     <Container className="py-4">
@@ -323,10 +312,8 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
           .budget-controls { display: flex; gap: 12px; align-items: center; width: 100%; }
           .budget-controls .dual-range-wrap { flex: 1; }
           .reset-wrap { margin-left: 12px; }
-          /* Dropdown menu tweaks (desktop) */
           .dropdown-menu.custom-social { min-width: 240px; max-height: 300px; overflow-y: auto; padding: 12px 20px 18px 22px; box-sizing: border-box; }
 
-          /* Responsive: stack on small screens */
           @media (max-width: 767px) {
             .filters-wrap { padding: 10px; }
             .filters-row { flex-direction: column; align-items: stretch; gap: 10px; }
@@ -367,6 +354,7 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
                 placeholder="Search by name or description..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                aria-label="Search by name or description"
                 style={{
                   borderRadius: 10,
                   border: '1px solid rgba(59,130,246,0.16)',
@@ -388,7 +376,6 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
               </div>
 
               <div className="dual-range-wrap" style={{ flex: 1 }}>
-                {/* REPLACED: custom DualRange component */}
                 <DualRange
                   min={minAvailable}
                   max={maxAvailable}
@@ -426,11 +413,12 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
               {/* hide default caret on the Bootstrap toggle to keep a single caret */}
               <style>{`.no-caret::after{display:none !important}`}</style>
 
-              <Dropdown show={socialOpen} onToggle={(isOpen) => setSocialOpen(isOpen)}>
+              <Dropdown show={socialOpen} onToggle={(isOpen) => setSocialOpen(isOpen)} align={isSmallViewport ? 'start' : 'end'}>
                 <Dropdown.Toggle
                   as="div"
                   id="dropdown-social"
                   className="no-caret"
+                  role="button"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -468,6 +456,10 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
                     boxSizing: 'border-box',
                     overflowX: 'hidden',
                     zIndex: 1050,
+                    paddingLeft: 22,
+                    paddingRight: 20,
+                    paddingTop: 12,
+                    paddingBottom: 18,
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingRight: 6 }}>
