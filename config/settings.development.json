@@ -9,6 +9,7 @@
       "roommateStatus": "Looking",
       "budget": 1000.00,
       "image": "/images/bob.png",
+      "name": "Admin Bob",
       "description": "I like building things.",
       "clean": "Very clean",
       "social": "Moderate",
@@ -22,7 +23,14 @@
       "role": "USER",
       "preferences": "Looking for a roommate who enjoys social activities and is easy-going.",
       "roommateStatus": "Looking",
-      "budget": 800.00
+      "budget": 800.00,
+      "image": "/images/john.png",
+      "name": "John",
+      "description": "Enjoys surfing, weekend BBQs, and meeting new people.",
+      "clean": "Clean",
+      "social": "High",
+      "study": "Casual",
+      "sleep": "Night owl"
     },
     {
       "id": 3,
@@ -31,7 +39,14 @@
       "role": "USER",
       "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",
       "roommateStatus": "Has Roommate",
-      "budget": 900.00
+      "budget": 900.00,
+      "image": "/images/jane.png",
+      "name": "Jane",
+      "description": "Enjoys quiet nights, good books, and tea.",
+      "clean": "Moderate",
+      "social": "Low",
+      "study": "Focused",
+      "sleep": "Early riser"
     },
     {
       "id": 4,
@@ -40,7 +55,14 @@
       "role": "USER",
       "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",
       "roommateStatus": "Has Roommate",
-      "budget": 1100.00
+      "budget": 1100.00,
+      "image": "/images/milo.png",
+      "name": "Milo",
+      "description": "Likes hiking, quiet weekends, and cooking.",
+      "clean": "Clean",
+      "social": "Moderate",
+      "study": "Regular",
+      "sleep": "Night owl"
     }
   ]
 }
