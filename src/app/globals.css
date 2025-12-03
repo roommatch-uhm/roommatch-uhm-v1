@@ -133,7 +133,7 @@ a {
 }
 
 .react-calendar__tile--now {
-  background: #eaeaea !important;
+  background: #c3c3c3 !important;
   color: #000 !important;
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
 }
