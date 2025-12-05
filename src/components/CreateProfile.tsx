@@ -8,7 +8,6 @@ import {
   Container,
   Form,
   Row,
-  Image,
 } from 'react-bootstrap';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -17,12 +16,11 @@ import { useRouter } from 'next/navigation';
 import { createProfile } from '@/lib/dbActions';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { CreateProfileSchema } from '@/lib/validationSchemas';
-import ProfileImageUpload from '@/components/UploadImg';
+import React, { useRef, useState } from 'react';
 
 type FormValues = {
   name: string;
   description: string;
-  image?: string | null;
   clean: 'excellent' | 'good' | 'fair' | 'poor';
   budget?: number | null;
   social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
@@ -41,11 +39,12 @@ export default function CreateUserProfile() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(CreateProfileSchema),
-    defaultValues: { image: null, budget: 0 },
+    defaultValues: { budget: 0 },
   });
 
-  const selectedImage = watch('image');
   const router = useRouter();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   if (status === 'loading') return <LoadingSpinner />;
   if (status === 'unauthenticated') {
@@ -53,62 +52,56 @@ export default function CreateUserProfile() {
     return null;
   }
 
-  // debug: show form errors in console (do not JSON.stringify — errors may contain circular refs)
-  console.log('form errors (raw)', errors);
-  // also produce a serializable summary of messages for easy inspection
-  const serializableErrors = Object.keys(errors).reduce((acc: Record<string, any>, key) => {
-    const e = (errors as any)[key];
-    acc[key] = { message: e?.message ?? null };
-    return acc;
-  }, {});
-  console.log('form errors (summary)', JSON.stringify(serializableErrors, null, 2));
+  // Update preview when user selects a new file
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl(null);
+    }
+  };
 
   const onError = (errs: any) => {
-    // Build a friendly message listing each invalid field and message
     const entries = Object.keys(errs).map((k) => {
       const m = (errs as any)[k]?.message ?? 'invalid';
       return `${k}: ${m}`;
     });
     const message = entries.length ? entries.join('\n') : 'Some required fields are missing or invalid.';
-    console.log('Validation errors (onError):', errs, message);
-
-    // Focus the first invalid field if present
-    const firstKey = Object.keys(errs)[0];
-    if (firstKey) {
-      const el = document.querySelector(`[name="${firstKey}"]`) as HTMLElement | null;
-      if (el && typeof el.focus === 'function') el.focus();
-    }
-
-    // Show readable message to the user
     swal('Please fix form errors', message, 'error');
   };
 
-  // ensure onSubmit is wired to the <Form> below and button is type="submit"
-
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    console.log('onSubmit fired, data=', data);
     const userIdStr = (session?.user as any)?.id;
     if (!userIdStr) {
       swal('Error', 'You must be logged in', 'error');
       return;
     }
 
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('description', data.description);
+    formData.append('clean', data.clean);
+    formData.append('budget', String(data.budget ?? 0));
+    formData.append('social', data.social);
+    formData.append('study', data.study);
+    formData.append('sleep', data.sleep);
+    formData.append('userId', userIdStr);
+
+    // Append file directly from input
+    if (fileInput.current?.files?.[0]) {
+      formData.append('image', fileInput.current.files[0]);
+    }
+
     try {
-      const payload = {
-        ...data,
-        userId: parseInt(userIdStr, 10),
-        budget: Number(data.budget) || 0,
-        image: data.image ?? null,
-      };
-
-      console.log('Submitting profile payload:', payload);
-      const created = await createProfile(payload);
-      console.log('createProfile returned:', created);
-
+      const res = await fetch('/api/profiles', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error(await res.text());
       swal('Success', 'Your Profile has been saved', 'success', { timer: 1500 });
       router.push('/profile');
     } catch (err: any) {
-      console.error('createProfile error', err);
       swal('Error', err?.message || 'Failed to create profile', 'error');
     }
   };
@@ -163,7 +156,7 @@ export default function CreateUserProfile() {
                       </select>
                     </Form.Group>
 
-                    {/* Budget (increment/decrement by 100, never negative) */}
+                    {/* Budget */}
                     <Form.Group className="mb-3">
                       <Form.Label>Budget</Form.Label>
                       <div className="d-flex align-items-center gap-2">
@@ -184,8 +177,16 @@ export default function CreateUserProfile() {
                           type="number"
                           {...register('budget', { valueAsNumber: true })}
                           className="form-control d-inline-block"
-                          style={{ width: 140 }}
-                          readOnly
+                          style={{ width: 140, MozAppearance: 'textfield' }}
+                          min={0}
+                          onBlur={(e) => {
+                            const n = Number((e.target as HTMLInputElement).value);
+                            if (Number.isNaN(n)) {
+                              setValue('budget', 0, { shouldValidate: true, shouldDirty: true });
+                            } else {
+                              setValue('budget', Math.max(0, n), { shouldValidate: true, shouldDirty: true });
+                            }
+                          }}
                         />
 
                         <button
@@ -200,6 +201,7 @@ export default function CreateUserProfile() {
                           +100
                         </button>
                       </div>
+                      <small className="text-muted">You can also type a number directly.</small>
                     </Form.Group>
 
                     {/* Social */}
@@ -238,19 +240,29 @@ export default function CreateUserProfile() {
                   <Col>
                     <Form.Group className="mb-3">
                       <Form.Label>Profile Photo</Form.Label>
-                      <ProfileImageUpload
-                        onUpload={(url) =>
-                          setValue('image', url, { shouldValidate: true, shouldDirty: true })
-                        }
+                      {previewUrl && (
+                        <div className="mb-2">
+                          <img
+                            src={previewUrl}
+                            alt="Preview"
+                            style={{ maxWidth: '100%', maxHeight: 500, borderRadius: 8 }}
+                          />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control"
+                        ref={fileInput}
+                        onChange={handleFileChange}
                       />
-                      <input type="hidden" {...register('image')} />
                     </Form.Group>
                   </Col>
                 </Row>
 
                 <Row className="pt-3">
                   <Col>
-                    <Button type="submit" variant="primary" onClick={() => console.log('Submit button clicked')}>
+                    <Button type="submit" variant="primary">
                       Submit
                     </Button>
                   </Col>
@@ -258,7 +270,10 @@ export default function CreateUserProfile() {
                     <Button
                       type="button"
                       variant="warning"
-                      onClick={() => reset()}
+                      onClick={() => {
+                        reset();
+                        setPreviewUrl(null);
+                      }}
                     >
                       Reset
                     </Button>

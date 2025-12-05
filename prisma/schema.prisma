@@ -61,9 +61,7 @@ model Profile {
   id           Int      @id @default(autoincrement())
   userId       Int      @unique
   user         User     @relation(fields: [userId], references: [id]) // added opposite relation
-  imageUrl     String?
-  imageKey     String?
-  imageSource  String?
+  imageData    Bytes?
   imageAddedAt DateTime?
   name         String
   description  String
