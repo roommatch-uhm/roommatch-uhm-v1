@@ -53,8 +53,11 @@ async function main() {
       update: {},
       create: {
         userId: user.id,
-        image: account.image || null,
-        name: account.name || 'Unknown', // <-- Use the name from JSON, not UHemail
+        imageUrl: account.image || null, // <-- FIXED: use imageUrl, not image
+        imageKey: null,
+        imageSource: null,
+        imageAddedAt: null,
+        name: account.name || 'Unknown',
         description: account.description || '',
         clean: account.clean || '',
         budget: account.budget ?? null,
