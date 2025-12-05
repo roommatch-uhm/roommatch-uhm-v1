@@ -1,11 +1,10 @@
 'use server';
 
 import { PrismaClient, Profile, Role } from '@prisma/client';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { hash } from 'bcrypt';
 import { validatePassword } from './passwordValidator';
 
-// safe global prisma singleton for dev
+// Safe global prisma singleton for dev
 declare global {
   // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined;
@@ -13,104 +12,31 @@ declare global {
 const prisma: PrismaClient = global.__prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== 'production') global.__prisma = prisma;
 
-// Supabase server client (service role) for uploads / signed URLs
-const SUPABASE_URL = process.env.STORAGE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY;
-const SUPABASE_BUCKET = process.env.STORAGE_SUPABASE_BUCKET || 'profile-avatars';
+/* ------- Profile helpers (imageData only, no Supabase) ------- */
 
-let supabase: SupabaseClient | null = null;
-if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-}
-
-/**
- * Uploads a file buffer to Supabase Storage and updates the profile row with the key + public URL.
- * Returns the updated Profile.
- */
-export async function uploadAndAttachProfileImage(
-  userId: number,
-  fileBuffer: Buffer,
-  originalName: string,
-  contentType?: string,
-) : Promise<Profile> {
-  if (!supabase) throw new Error('Supabase service client not configured (missing env vars).');
-
-  const filename = `profiles/${userId}/${Date.now()}_${originalName.replace(/\s+/g, '_')}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from(SUPABASE_BUCKET)
-    .upload(filename, fileBuffer, { contentType: contentType ?? 'application/octet-stream', upsert: false });
-
-  if (uploadError) {
-    // bubble up a helpful error
-    throw new Error(`Supabase upload failed: ${uploadError.message}`);
-  }
-
-  // If bucket is public this returns a public URL. For private buckets you can create signed URLs below.
-  const { data: publicUrlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename);
-  const publicUrl = publicUrlData?.publicUrl ?? null;
-
-  const updated = await prisma.profile.update({
-    where: { userId },
-    data: {
-      imageKey: filename,
-      imageUrl: publicUrl,
-      imageSource: 'supabase',
-      imageAddedAt: new Date(),
-    },
-  });
-
-  return updated;
-}
-
-/**
- * Create a short-lived signed URL for a given profile's stored imageKey.
- * Returns signed url string or null.
- */
-export async function createSignedProfileImageUrl(profile: Profile, expiresInSeconds = 60): Promise<string | null> {
-  if (!supabase) throw new Error('Supabase service client not configured (missing env vars).');
-  const key = profile.imageKey ?? '';
-  if (!key) return profile.imageUrl ?? null;
-
-  // createSignedUrl returns data.signedUrl
-  const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).createSignedUrl(key, expiresInSeconds);
-  if (error) {
-    console.warn('createSignedProfileImageUrl error', error);
-    return profile.imageUrl ?? null;
-  }
-  return data?.signedUrl ?? profile.imageUrl ?? null;
-}
-
-/* ------- existing profile helpers (updated to prefer new image fields) ------- */
-
-export type CreateProfileInput = {
+export async function createProfile(profile: {
   userId: number;
   name: string;
   description?: string | null;
-  // imageUrl / imageKey preferred over legacy `image`
-  imageUrl?: string | null;
-  imageKey?: string | null;
+  imageData?: Buffer | null;
   clean: 'excellent' | 'good' | 'fair' | 'poor';
-  budget: number;
+  budget?: number | null;
   social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
   study: 'Cramming' | 'Regular' | 'None';
   sleep: 'Early_Bird' | 'Night_Owl' | 'Flexible';
-};
-
-export async function createProfile(profile: CreateProfileInput) {
+}) {
   const created = await prisma.profile.create({
     data: {
       user: { connect: { id: profile.userId } },
       name: profile.name,
       description: profile.description ?? '',
-      imageUrl: profile.imageUrl ?? null,
-      imageKey: profile.imageKey ?? null,
+      imageData: profile.imageData ?? null,
+      imageAddedAt: profile.imageData ? new Date() : undefined,
       clean: profile.clean,
       budget: profile.budget,
       social: profile.social,
       study: profile.study,
       sleep: profile.sleep,
-      imageAddedAt: profile.imageUrl ? new Date() : undefined,
     },
   });
 
@@ -122,8 +48,7 @@ export async function editProfile(
   updates: {
     name?: string;
     description?: string;
-    imageUrl?: string | null; // <-- use imageUrl
-    imageKey?: string | null;
+    imageData?: Buffer | null;
     clean?: 'excellent' | 'good' | 'fair' | 'poor';
     budget?: number | null;
     social?: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
@@ -131,20 +56,21 @@ export async function editProfile(
     sleep?: 'Early_Bird' | 'Night_Owl' | 'Flexible';
   },
 ) {
+  const updateData: any = {
+    ...(updates.name !== undefined && { name: updates.name }),
+    ...(updates.description !== undefined && { description: updates.description }),
+    ...(updates.imageData !== undefined && { imageData: updates.imageData }),
+    ...(updates.clean !== undefined && { clean: updates.clean }),
+    ...(updates.budget !== undefined && { budget: updates.budget }),
+    ...(updates.social !== undefined && { social: updates.social }),
+    ...(updates.study !== undefined && { study: updates.study }),
+    ...(updates.sleep !== undefined && { sleep: updates.sleep }),
+    ...(updates.imageData !== undefined && updates.imageData ? { imageAddedAt: new Date() } : {}),
+  };
+
   const updated = await prisma.profile.update({
     where: { id: profileId },
-    data: {
-      ...(updates.name !== undefined && { name: updates.name }),
-      ...(updates.description !== undefined && { description: updates.description }),
-      ...(updates.imageUrl !== undefined && { imageUrl: updates.imageUrl }),
-      ...(updates.imageKey !== undefined && { imageKey: updates.imageKey }),
-      ...(updates.clean !== undefined && { clean: updates.clean }),
-      ...(updates.budget !== undefined && { budget: updates.budget }),
-      ...(updates.social !== undefined && { social: updates.social }),
-      ...(updates.study !== undefined && { study: updates.study }),
-      ...(updates.sleep !== undefined && { sleep: updates.sleep }),
-      ...(updates.imageUrl !== undefined && updates.imageUrl ? { imageAddedAt: new Date() } : {}),
-    },
+    data: updateData,
   });
 
   return updated;
@@ -160,7 +86,7 @@ export async function getProfileById(profileId: number) {
   });
 }
 
-/* Optional: user creation helper (kept from your earlier code) */
+/* User helpers remain unchanged */
 export async function createUserProfile({
   username,
   UHemail,
@@ -256,7 +182,7 @@ export async function updateUserProfile(userId: number, updates: {
   });
 }
 
-/* Chat / message helpers remain unchanged - ensure your schema has Chat/Message models */
+/* Chat / message helpers remain unchanged */
 export async function createChat(userId1: number, userId2: number) {
   const user1 = await prisma.user.findUnique({ where: { id: userId1 } });
   const user2 = await prisma.user.findUnique({ where: { id: userId2 } });

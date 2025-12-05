@@ -22,13 +22,12 @@ export const CreateProfileSchema = Yup.object({
   description: Yup.string()
     .max(500, 'Description must be at most 500 characters')
     .required('Description is required'),
-  image: Yup.string()
+  imageData: Yup.mixed()
     .nullable()
-    .notRequired()
     .test(
-      'is-url-or-relative',
-      'Image must be valid',
-      (val) => !val || /^\/|^https?:\/\//.test(val),
+      'file-size',
+      'Image must be less than 5MB',
+      (value) => !value || (value instanceof Uint8Array && value.byteLength <= MAX_PROFILE_IMAGE_SIZE)
     ),
   clean: Yup.string()
     .oneOf(['excellent', 'good', 'fair', 'poor'])

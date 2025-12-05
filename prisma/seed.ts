@@ -4,49 +4,85 @@ import * as config from '../config/settings.development.json';
 
 const prisma = new PrismaClient();
 
+type SeedAccount = {
+  id?: number;
+  UHemail: string;
+  username?: string;
+  password?: string;
+  role?: string;
+  preferences?: string;
+  roommateStatus?: string;
+  imageData?: { type: 'Buffer'; data: number[] }; // <-- add this line
+};
+
 async function main() {
   console.log('Accounts to seed:', config.defaultAccounts);
 
   // // Clear the User table (for development only)
   // await prisma.user.deleteMany({});
 
-  const upsertUserPromises = config.defaultAccounts.map(async (account) => {
+  const upsertUserPromises = (config.defaultAccounts as SeedAccount[]).map(async (account) => {
     const role = (account.role as Role) || Role.USER;
     const hashedPassword = await hash(account.password || 'changeme', 10);
+
+    // Defensive: ensure required fields exist
+    if (!account.UHemail) {
+      console.warn('Skipping account with missing UHemail:', account);
+      return;
+    }
+    if (!account.username) {
+      account.username = account.UHemail;
+    }
 
     console.log(`  Creating user: ${account.UHemail} with role: ${role}`);
 
     // Upsert user and get the created/updated user object (including its id)
     const user = await prisma.user.upsert({
       where: { UHemail: account.UHemail },
-      update: {},
-      create: {
-        UHemail: account.UHemail,
-        username: account.username || account.UHemail, // Add username field, fallback to UHemail if not present
-        // 'username' is not a field on the User model; keep names in the Profile record instead
+      update: {
+        username: account.username,
         password: hashedPassword,
         role,
         preferences: account.preferences || '',
         roommateStatus: account.roommateStatus || 'Looking',
-        budget: account.budget ?? null,
+      },
+      create: {
+        UHemail: account.UHemail,
+        username: account.username,
+        password: hashedPassword,
+        role,
+        preferences: account.preferences || '',
+        roommateStatus: account.roommateStatus || 'Looking',
       },
     });
 
     // Upsert profile for this user using the correct user.id
+    let imageBuffer: Buffer | null = null;
+    if (account.imageData && account.imageData.type === 'Buffer' && Array.isArray(account.imageData.data)) {
+      imageBuffer = Buffer.from(account.imageData.data);
+    }
+
     await prisma.profile.upsert({
       where: { userId: user.id },
-      update: {},
+      update: {
+        imageData: imageBuffer,
+        name: '',
+        description: '',
+        clean: '',
+        social: '',
+        study: '',
+        sleep: '',
+      },
       create: {
         userId: user.id,
-        imageUrl: account.image ?? null,
-        name: account.name || 'Unknown', // <-- Use the name from JSON, not UHemail
-        description: account.description || '',
-        clean: account.clean || '',
-        budget: account.budget ?? null,
-        social: account.social || '',
-        study: account.study || '',
-        sleep: account.sleep || '',
-      },
+        imageData: imageBuffer,
+        name: '',
+        description: '',
+        clean: '',
+        social: '',
+        study: '',
+        sleep: '',
+      }
     });
   });
 
@@ -62,4 +98,3 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
-  

@@ -8,7 +8,6 @@ import {
   Container,
   Form,
   Row,
-  Image,
 } from 'react-bootstrap';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -17,12 +16,11 @@ import { useRouter } from 'next/navigation';
 import { createProfile } from '@/lib/dbActions';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { CreateProfileSchema } from '@/lib/validationSchemas';
-import ProfileImageUpload from '@/components/UploadImg';
+import React, { useRef, useState } from 'react';
 
 type FormValues = {
   name: string;
   description: string;
-  imageUrl?: string | null; // <-- use imageUrl
   clean: 'excellent' | 'good' | 'fair' | 'poor';
   budget?: number | null;
   social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
@@ -41,11 +39,12 @@ export default function CreateUserProfile() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(CreateProfileSchema),
-    defaultValues: { imageUrl: null, budget: 0 },
+    defaultValues: { imageData: null, budget: 0 },
   });
 
-  const selectedImage = watch('imageUrl');
   const router = useRouter();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [name, setName] = useState('');
 
   if (status === 'loading') return <LoadingSpinner />;
   if (status === 'unauthenticated') {
@@ -53,37 +52,14 @@ export default function CreateUserProfile() {
     return null;
   }
 
-  // debug: show form errors in console (do not JSON.stringify — errors may contain circular refs)
-  console.log('form errors (raw)', errors);
-  // also produce a serializable summary of messages for easy inspection
-  const serializableErrors = Object.keys(errors).reduce((acc: Record<string, any>, key) => {
-    const e = (errors as any)[key];
-    acc[key] = { message: e?.message ?? null };
-    return acc;
-  }, {});
-  console.log('form errors (summary)', JSON.stringify(serializableErrors, null, 2));
-
   const onError = (errs: any) => {
-    // Build a friendly message listing each invalid field and message
     const entries = Object.keys(errs).map((k) => {
       const m = (errs as any)[k]?.message ?? 'invalid';
       return `${k}: ${m}`;
     });
     const message = entries.length ? entries.join('\n') : 'Some required fields are missing or invalid.';
-    console.log('Validation errors (onError):', errs, message);
-
-    // Focus the first invalid field if present
-    const firstKey = Object.keys(errs)[0];
-    if (firstKey) {
-      const el = document.querySelector(`[name="${firstKey}"]`) as HTMLElement | null;
-      if (el && typeof el.focus === 'function') el.focus();
-    }
-
-    // Show readable message to the user
     swal('Please fix form errors', message, 'error');
   };
-
-  // ensure onSubmit is wired to the <Form> below and button is type="submit"
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     const userIdStr = (session?.user as any)?.id;
@@ -92,15 +68,27 @@ export default function CreateUserProfile() {
       return;
     }
 
-    try {
-      const payload = {
-        ...data,
-        userId: parseInt(userIdStr, 10),
-        budget: Number(data.budget) || 0,
-        imageUrl: data.imageUrl ?? null, // <-- pass imageUrl
-      };
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('description', data.description);
+    formData.append('clean', data.clean);
+    formData.append('budget', String(data.budget ?? 0));
+    formData.append('social', data.social);
+    formData.append('study', data.study);
+    formData.append('sleep', data.sleep);
+    formData.append('userId', userIdStr);
 
-      const created = await createProfile(payload);
+    // Append file directly from input
+    if (fileInput.current?.files?.[0]) {
+      formData.append('image', fileInput.current.files[0]);
+    }
+
+    try {
+      const res = await fetch('/api/profiles', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error(await res.text());
       swal('Success', 'Your Profile has been saved', 'success', { timer: 1500 });
       router.push('/profile');
     } catch (err: any) {
@@ -158,43 +146,14 @@ export default function CreateUserProfile() {
                       </select>
                     </Form.Group>
 
-                    {/* Budget (increment/decrement by 100, never negative) */}
+                    {/* Budget */}
                     <Form.Group className="mb-3">
                       <Form.Label>Budget</Form.Label>
-                      <div className="d-flex align-items-center gap-2">
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          onClick={() => {
-                            const cur = Number(watch('budget')) || 0;
-                            setValue('budget', Math.max(0, cur - 100), { shouldValidate: true, shouldDirty: true });
-                          }}
-                          aria-label="Decrease budget"
-                          disabled={(Number(watch('budget')) || 0) <= 0}
-                        >
-                          -100
-                        </button>
-
-                        <input
-                          type="number"
-                          {...register('budget', { valueAsNumber: true })}
-                          className="form-control d-inline-block"
-                          style={{ width: 140 }}
-                          readOnly
-                        />
-
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          onClick={() => {
-                            const cur = Number(watch('budget')) || 0;
-                            setValue('budget', cur + 100, { shouldValidate: true, shouldDirty: true });
-                          }}
-                          aria-label="Increase budget"
-                        >
-                          +100
-                        </button>
-                      </div>
+                      <input
+                        type="number"
+                        {...register('budget', { valueAsNumber: true })}
+                        className="form-control"
+                      />
                     </Form.Group>
 
                     {/* Social */}
@@ -233,19 +192,19 @@ export default function CreateUserProfile() {
                   <Col>
                     <Form.Group className="mb-3">
                       <Form.Label>Profile Photo</Form.Label>
-                      <ProfileImageUpload
-                        onUpload={(url) =>
-                          setValue('imageUrl', url, { shouldValidate: true, shouldDirty: true })
-                        }
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control"
+                        ref={fileInput}
                       />
-                      <input type="hidden" {...register('imageUrl')} />
                     </Form.Group>
                   </Col>
                 </Row>
 
                 <Row className="pt-3">
                   <Col>
-                    <Button type="submit" variant="primary" onClick={() => console.log('Submit button clicked')}>
+                    <Button type="submit" variant="primary">
                       Submit
                     </Button>
                   </Col>

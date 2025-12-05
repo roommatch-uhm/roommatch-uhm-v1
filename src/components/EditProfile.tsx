@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -8,15 +8,12 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import swal from 'sweetalert';
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 import { EditProfileSchema } from '@/lib/validationSchemas';
-import { editProfile } from '@/lib/dbActions';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import ProfileImageUpload from '@/components/UploadImg';
 import type { Profile } from '@prisma/client';
 
 type FormValues = {
   name: string;
   description: string;
-  image?: string | null;
   clean: 'excellent' | 'good' | 'fair' | 'poor';
   budget?: number | null;
   social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
@@ -27,18 +24,7 @@ type FormValues = {
 export default function EditProfileForm({ profile }: { profile: Profile }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [uploading, setUploading] = useState(false);
-
-  // normalize stored image path to ensure a usable URL (leading slash)
-  const normalizeImageUrl = (img?: string | null) => {
-    if (!img) return '/uploads/default.jpg';
-    let src = img;
-    if (src.startsWith('public/')) src = src.replace(/^public\//, '');
-    if (!src.startsWith('/') && !/^https?:\/\//.test(src)) src = `/${src}`;
-    return src;
-  };
-
-  const initialImageUrl = normalizeImageUrl(profile?.imageUrl ?? null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -52,7 +38,6 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     defaultValues: {
       name: profile?.name ?? '',
       description: profile?.description ?? '',
-      image: profile?.imageUrl ?? null,
       clean: (profile?.clean as any) ?? 'good',
       budget: profile?.budget ?? 0,
       social: (profile?.social as any) ?? 'Unsure',
@@ -65,7 +50,6 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     reset({
       name: profile?.name ?? '',
       description: profile?.description ?? '',
-      image: profile?.imageUrl ?? null,
       clean: (profile?.clean as any) ?? 'good',
       budget: profile?.budget ?? 0,
       social: (profile?.social as any) ?? 'Unsure',
@@ -82,51 +66,32 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      const payload = {
-        name: data.name,
-        description: data.description,
-        image: data.image ?? null,
-        clean: data.clean,
-        budget: Number(data.budget) || 0,
-        social: data.social,
-        study: data.study,
-        sleep: data.sleep,
-      };
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('description', data.description);
+      formData.append('clean', data.clean);
+      formData.append('budget', String(data.budget ?? 0));
+      formData.append('social', data.social);
+      formData.append('study', data.study);
+      formData.append('sleep', data.sleep);
+      formData.append('userId', String(profile.userId)); // or get from session
 
-      console.log('Editing profile', profile.id, payload);
-      const updated = await editProfile(profile.id, payload);
-      console.log('editProfile returned', updated);
+      // Append file if selected
+      if (fileInput.current?.files?.[0]) {
+        formData.append('image', fileInput.current.files[0]);
+      }
 
+      const res = await fetch(`/api/profiles/${profile.id}`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error(await res.text());
       swal('Success', 'Profile updated', 'success', { timer: 1200 });
       router.push('/profile');
     } catch (err: any) {
       console.error('editProfile error', err);
       swal('Error', err?.message || 'Failed to update profile', 'error');
-    }
-  };
-
-  // handler: upload to your server route which writes to Supabase and updates Prisma
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    const userId = (session as any)?.user?.id;
-    if (!file || !userId) return;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('userId', String(userId));
-      const res = await fetch('/api/uploadProfileImage', { method: 'POST', body: fd });
-      const json = await res.json();
-      if (res.ok && json?.profile) {
-        // optionally navigate or refresh
-        router.refresh();
-      } else {
-        console.error('upload failed', json);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -195,7 +160,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                       </select>
                     </Form.Group>
 
-                    {/* Budget (increment/decrement by 100, never negative; also editable) */}
+                    {/* Budget */}
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Budget</Form.Label>
                       <div className="d-flex align-items-center gap-2">
@@ -280,15 +245,12 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                   <Col md={5}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Profile Photo</Form.Label>
-                      <div style={{ borderRadius: 8, padding: 10, border: '1px dashed #e6e9ee', background: '#fafafa' }}>
-                        <ProfileImageUpload
-                          initialUrl={initialImageUrl}
-                          onUpload={(url) =>
-                            setValue('image', url, { shouldValidate: true, shouldDirty: true })
-                          }
-                        />
-                      </div>
-                      <input type="hidden" {...register('image')} />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control"
+                        ref={fileInput}
+                      />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -307,7 +269,6 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                         reset({
                           name: profile.name,
                           description: profile.description,
-                          image: profile.imageUrl ?? null,
                           clean: profile.clean as any,
                           budget: profile.budget ?? 0,
                           social: profile.social as any,
@@ -322,8 +283,6 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                   </Col>
                 </Row>
               </Form>
-
-              {/* File input handled by the ProfileImageUpload component above */}
             </Card.Body>
           </Card>
         </Col>
