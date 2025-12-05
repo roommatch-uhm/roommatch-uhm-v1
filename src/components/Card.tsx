@@ -26,21 +26,20 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
     profile.sleep,
   ].filter(Boolean);
 
-  const getImageSrc = (img?: string | null) => {
-    if (!img) return '/uploads/default.jpg';
-    let src = img;
-    if (src.startsWith('public/')) src = src.replace(/^public\//, '');
-    if (!src.startsWith('/') && !/^https?:\/\//.test(src)) src = `/${src}`;
-    return src;
+  // Use imageData (bytes) for profile image, fallback to default avatar
+  const getImageSrc = () => {
+    if (profile.imageData) {
+      // Convert Buffer/Uint8Array to base64 string
+      const base64 =
+        typeof Buffer !== 'undefined'
+          ? Buffer.from(profile.imageData).toString('base64')
+          : btoa(String.fromCharCode(...new Uint8Array(profile.imageData as any)));
+      return `data:image/jpeg;base64,${base64}`;
+    }
+    return '/uploads/default.jpg';
   };
 
-  // prefer explicit URLs, then any provided source, then fall back to imageKey storage endpoint or a default file
-  const imgCandidate =
-    profile.imageUrl ??
-    profile.imageSource ??
-    (profile.imageKey ? `/api/storage/${profile.imageKey}` : `/uploads/${profile.id}.png`);
-
-  const imgSrc = getImageSrc(imgCandidate);
+  const imgSrc = getImageSrc();
 
   return (
     <Card className="w-100 mx-auto shadow-lg" style={{ borderRadius: 12, overflow: 'hidden' }}>
