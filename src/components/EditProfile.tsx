@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -25,6 +25,11 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    profile.imageData
+      ? `/api/profiles/${profile.id}/image`
+      : null
+  );
 
   const {
     register,
@@ -64,6 +69,16 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     return null;
   }
 
+  // Update preview when user selects a new file
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl(profile.imageData ? `/api/profiles/${profile.id}/image` : null);
+    }
+  };
+
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
       const formData = new FormData();
@@ -74,7 +89,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       formData.append('social', data.social);
       formData.append('study', data.study);
       formData.append('sleep', data.sleep);
-      formData.append('userId', String(profile.userId)); // or get from session
+      formData.append('userId', String(profile.userId));
 
       // Append file if selected
       if (fileInput.current?.files?.[0]) {
@@ -245,16 +260,25 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                   <Col md={5}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Profile Photo</Form.Label>
+                      {previewUrl && (
+                        <div className="mb-2">
+                          <img
+                            src={previewUrl}
+                            alt="Preview"
+                            style={{ maxWidth: '100%', maxHeight: 400, borderRadius: 8 }}
+                          />
+                        </div>
+                      )}
                       <input
                         type="file"
                         accept="image/*"
                         className="form-control"
                         ref={fileInput}
+                        onChange={handleFileChange}
                       />
                     </Form.Group>
                   </Col>
                 </Row>
-
                 <Row className="pt-3">
                   <Col>
                     <Button type="submit" variant="primary" className="rounded-pill px-4">
@@ -265,7 +289,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                     <Button
                       type="button"
                       variant="outline-secondary"
-                      onClick={() =>
+                      onClick={() => {
                         reset({
                           name: profile.name,
                           description: profile.description,
@@ -274,8 +298,9 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                           social: profile.social as any,
                           study: profile.study as any,
                           sleep: profile.sleep as any,
-                        })
-                      }
+                        });
+                        setPreviewUrl(profile.imageData ? `/api/profiles/${profile.id}/image` : null);
+                      }}
                       className="rounded-pill"
                     >
                       Reset

@@ -39,18 +39,28 @@ export default function CreateUserProfile() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(CreateProfileSchema),
-    defaultValues: { imageData: null, budget: 0 },
+    defaultValues: { budget: 0 },
   });
 
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
-  const [name, setName] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   if (status === 'loading') return <LoadingSpinner />;
   if (status === 'unauthenticated') {
     router.push('/auth/signin');
     return null;
   }
+
+  // Update preview when user selects a new file
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl(null);
+    }
+  };
 
   const onError = (errs: any) => {
     const entries = Object.keys(errs).map((k) => {
@@ -149,11 +159,49 @@ export default function CreateUserProfile() {
                     {/* Budget */}
                     <Form.Group className="mb-3">
                       <Form.Label>Budget</Form.Label>
-                      <input
-                        type="number"
-                        {...register('budget', { valueAsNumber: true })}
-                        className="form-control"
-                      />
+                      <div className="d-flex align-items-center gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={() => {
+                            const cur = Number(watch('budget')) || 0;
+                            setValue('budget', Math.max(0, cur - 100), { shouldValidate: true, shouldDirty: true });
+                          }}
+                          aria-label="Decrease budget"
+                          disabled={(Number(watch('budget')) || 0) <= 0}
+                        >
+                          -100
+                        </button>
+
+                        <input
+                          type="number"
+                          {...register('budget', { valueAsNumber: true })}
+                          className="form-control d-inline-block"
+                          style={{ width: 140, MozAppearance: 'textfield' }}
+                          min={0}
+                          onBlur={(e) => {
+                            const n = Number((e.target as HTMLInputElement).value);
+                            if (Number.isNaN(n)) {
+                              setValue('budget', 0, { shouldValidate: true, shouldDirty: true });
+                            } else {
+                              setValue('budget', Math.max(0, n), { shouldValidate: true, shouldDirty: true });
+                            }
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={() => {
+                            const cur = Number(watch('budget')) || 0;
+                            setValue('budget', cur + 100, { shouldValidate: true, shouldDirty: true });
+                          }}
+                          aria-label="Increase budget"
+                        >
+                          +100
+                        </button>
+                      </div>
+                      <small className="text-muted">You can also type a number directly.</small>
                     </Form.Group>
 
                     {/* Social */}
@@ -192,11 +240,21 @@ export default function CreateUserProfile() {
                   <Col>
                     <Form.Group className="mb-3">
                       <Form.Label>Profile Photo</Form.Label>
+                      {previewUrl && (
+                        <div className="mb-2">
+                          <img
+                            src={previewUrl}
+                            alt="Preview"
+                            style={{ maxWidth: '100%', maxHeight: 500, borderRadius: 8 }}
+                          />
+                        </div>
+                      )}
                       <input
                         type="file"
                         accept="image/*"
                         className="form-control"
                         ref={fileInput}
+                        onChange={handleFileChange}
                       />
                     </Form.Group>
                   </Col>
@@ -212,7 +270,10 @@ export default function CreateUserProfile() {
                     <Button
                       type="button"
                       variant="warning"
-                      onClick={() => reset()}
+                      onClick={() => {
+                        reset();
+                        setPreviewUrl(null);
+                      }}
                     >
                       Reset
                     </Button>

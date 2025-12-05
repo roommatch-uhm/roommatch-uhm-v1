@@ -43,7 +43,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const userId = Number(formData.get('userId'));
 
   const data: any = {
-    userId,
+    user: { connect: { id: userId } },
     name,
     description,
     clean,
@@ -54,7 +54,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   };
   if (imageBuffer) {
     data.imageData = imageBuffer;
-    data.imageAddedAt = new Date(); // <-- Add this line
+    data.imageAddedAt = new Date();
   }
 
   try {
