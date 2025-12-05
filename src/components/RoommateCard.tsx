@@ -18,39 +18,20 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
     profile.sleep,
   ].filter(Boolean);
 
-  const getImageSrc = (img?: string | null) => {
-    if (!img) return '/uploads/default.jpg';
-    let src = img;
-    if (src.startsWith('public/')) src = src.replace(/^public\//, '');
-    if (!src.startsWith('/') && !/^https?:\/\//.test(src)) src = `/${src}`;
-    return src;
+  // Use imageData (bytes) for profile image, fallback to default avatar
+  const getImageSrc = () => {
+    if (profile.imageData) {
+      // Convert Buffer/Uint8Array to base64 string
+      const base64 =
+        typeof Buffer !== 'undefined'
+          ? Buffer.from(profile.imageData).toString('base64')
+          : btoa(String.fromCharCode(...new Uint8Array(profile.imageData as any)));
+      return `data:image/jpeg;base64,${base64}`;
+    }
+    return '/uploads/default.jpg';
   };
 
-  const imgSrc = getImageSrc(
-    profile.imageUrl ?? (profile.imageKey ? `/uploads/${profile.imageKey}` : null) ?? null
-  );
-
-  // Replace image rendering logic to prefer profile.imageUrl (Supabase) and fallback to local /uploads
-  const Avatar: React.FC<{ profile: Profile; size?: number }> = ({ profile, size = 64 }) => {
-    const src = getImageSrc(
-      profile.imageUrl ??
-        (profile.imageKey ? `/uploads/${profile.imageKey}` : null) ??
-        `/uploads/${profile.userId || profile.id}.png`
-    );
-    return (
-      <img
-        src={src}
-        alt={profile.name ?? 'avatar'}
-        style={{
-          width: size,
-          height: size,
-          objectFit: 'cover',
-          borderRadius: '50%',
-          background: '#f3f4f6',
-        }}
-      />
-    );
-  };
+  const imgSrc = getImageSrc();
 
   return (
     <Card className="h-100">
@@ -81,7 +62,7 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
               width: '50%',
               display: 'flex',
               justifyContent: 'center',
-              alignItems: 'flex-start', // align top
+              alignItems: 'flex-start',
             }}
           >
             <Image
@@ -95,10 +76,10 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
               }}
               style={{
                 width: '100%',
-                maxHeight: '350px', // allow taller images
+                maxHeight: '350px',
                 height: 'auto',
-                objectFit: 'contain', // don't crop; preserve aspect
-                backgroundColor: '#f8f9fa', // subtle background for letterboxing
+                objectFit: 'contain',
+                backgroundColor: '#f8f9fa',
               }}
             />
           </div>

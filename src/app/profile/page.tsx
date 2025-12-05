@@ -26,10 +26,9 @@ const ProfilePage = async () => {
       profile = await prisma.profile.findUnique({ where: { userId: userIdNum } });
     }
 
-    if (!profile && typedSession.user.email) {
-      // fallback: find profile by the related user's email
+    if (!profile && typedSession?.user?.id) {
       profile = await prisma.profile.findFirst({
-        where: { user: { UHemail: typedSession.user.email } },
+        where: { userId: userIdNum },
       });
     }
 
