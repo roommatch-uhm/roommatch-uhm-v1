@@ -102,8 +102,8 @@ export default function Navbar() {
               >
                 {session
                 ? `Hi, ${
-                  session.user?.username ||
-                  session.user?.name ||
+                  (session.user as any)?.username ??
+                  session.user?.name ??
                   session.user?.email?.split('@')[0]
                 }`
                 : 'My Account'}
