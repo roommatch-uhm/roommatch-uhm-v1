@@ -13,13 +13,15 @@ export async function GET(req: NextRequest, { params }: RouteParams): Promise<Ne
     where: { id: Number(params.id) },
   });
   // Log image info using imageAddedAt and imageData size
+  const imageDataLength =
+    profile && (profile as any).imageData ? ((profile as any).imageData as Buffer).length : 0;
   console.log(
     'API returning profile:',
     profile?.name,
     'imageAddedAt:',
     profile?.imageAddedAt,
     'imageData bytes:',
-    profile?.imageData ? (profile.imageData as Buffer).length : 0
+    imageDataLength
   );
   if (!profile) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(profile);
