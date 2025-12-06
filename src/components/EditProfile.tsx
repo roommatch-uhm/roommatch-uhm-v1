@@ -25,11 +25,11 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(
-    profile.imageData
-      ? `/api/profiles/${profile.id}/image`
-      : null
-  );
+  const [previewUrl, setPreviewUrl] = useState<string | null>(() => {
+    if (!profile?.imageUrl) return null;
+    // If imageUrl is a local path, use the image API route so headers are correct
+    return profile.imageUrl.startsWith('/') ? `/api/profiles/${profile.id}/image` : profile.imageUrl;
+  });
 
   const {
     register,
@@ -75,7 +75,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     if (file) {
       setPreviewUrl(URL.createObjectURL(file));
     } else {
-      setPreviewUrl(profile.imageData ? `/api/profiles/${profile.id}/image` : null);
+      setPreviewUrl(profile.imageUrl ? (profile.imageUrl.startsWith('/') ? `/api/profiles/${profile.id}/image` : profile.imageUrl) : null);
     }
   };
 
@@ -299,7 +299,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                           study: profile.study as any,
                           sleep: profile.sleep as any,
                         });
-                        setPreviewUrl(profile.imageData ? `/api/profiles/${profile.id}/image` : null);
+                        setPreviewUrl(profile.imageUrl ? (profile.imageUrl.startsWith('/') ? `/api/profiles/${profile.id}/image` : profile.imageUrl) : null);
                       }}
                       className="rounded-pill"
                     >
