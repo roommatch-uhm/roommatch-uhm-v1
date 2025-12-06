@@ -5,29 +5,41 @@ import { Card, Image } from 'react-bootstrap';
 import React from 'react';
 import { Profile } from '@prisma/client';
 
+type ExtendedProfile = Profile & {
+  // imageData is not part of the Prisma Profile by default, but some server responses
+  // may include binary image bytes; make it optional here so TS doesn't complain.
+  imageData?: Buffer | Uint8Array | number[] | string | null;
+};
+
 interface RoommateCardProps {
-  profile: Profile;
+  profile: ExtendedProfile;
 }
 
 const RoommateCard = ({ profile }: RoommateCardProps) => {
   const attributes = [
-    profile.clean,
-    profile.budget,
-    profile.social,
-    profile.study,
-    profile.sleep,
-  ].filter(Boolean);
+    profile.clean ? 'Clean' : 'Unspecified',
+  ];
 
-  // Use imageData (bytes) for profile image, fallback to default avatar
+  // Determine image source: prefer imageUrl; if binary imageData is provided (e.g. from server), convert to base64, fallback to default avatar
   const getImageSrc = () => {
-    if (profile.imageData) {
-      // Convert Buffer/Uint8Array to base64 string
+    // Prefer an explicit URL if available (this comes from Prisma Profile)
+    if ((profile as any).imageUrl) {
+      return (profile as any).imageUrl as string;
+    }
+
+    // Support optional binary imageData when provided by server (not part of Prisma Profile by default)
+    const imageData = (profile as any).imageData as Buffer | Uint8Array | number[] | string | undefined | null;
+    if (imageData) {
+      // Convert Buffer/Uint8Array/string to base64 string
       const base64 =
-        typeof Buffer !== 'undefined'
-          ? Buffer.from(profile.imageData).toString('base64')
-          : btoa(String.fromCharCode(...new Uint8Array(profile.imageData as any)));
+        typeof Buffer !== 'undefined' && (Buffer as any).from
+          ? Buffer.from(imageData as any).toString('base64')
+          : typeof btoa !== 'undefined'
+          ? btoa(String.fromCharCode(...new Uint8Array(imageData as any)))
+          : String(imageData);
       return `data:image/jpeg;base64,${base64}`;
     }
+
     return '/uploads/default.jpg';
   };
 

@@ -3,11 +3,16 @@ import { Profile } from '@prisma/client';
 import RoommateDirectory from '@/components/RoommateDirectory';
 
 const RoommateDirectoryPage = async () => {
-  // Fetch profiles server-side
-  const profiles: Profile[] = await prisma.profile.findMany();
+  let profiles: Profile[] = [];
 
-  // Use the first profile as the current user profile (fallback)
-  const currentUserProfile: Profile = profiles[0] as Profile;
+  try {
+    profiles = await prisma.profile.findMany();
+  } catch (err) {
+    // DB/schema mismatch can cause the query to fail; log and fall back to empty list
+    console.error('Failed to fetch profiles (DB/schema mismatch):', err);
+  }
+
+  const currentUserProfile: Profile | null = (profiles[0] ?? null) as Profile | null;
 
   return <RoommateDirectory profiles={profiles} currentUserProfile={currentUserProfile} />;
 };
