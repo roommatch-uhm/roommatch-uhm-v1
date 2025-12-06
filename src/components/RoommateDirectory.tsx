@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 interface RoommateDirectoryProps {
   profiles: Profile[];
-  currentUserProfile: Profile;
+  currentUserProfile: Profile | null;
 }
 
 const SOCIAL_OPTIONS = ['Introvert', 'Ambivert', 'Extrovert', 'Unsure'] as const;
