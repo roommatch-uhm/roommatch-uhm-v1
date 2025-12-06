@@ -63,6 +63,12 @@ model Profile {
   user         User     @relation(fields: [userId], references: [id]) // added opposite relation
   imageData    Bytes?
   imageAddedAt DateTime?
+
+  // added URL/key/source fields so seed and API can use URLs
+  imageUrl     String?
+  imageKey     String?
+  imageSource  String?
+
   name         String
   description  String
   clean        String
