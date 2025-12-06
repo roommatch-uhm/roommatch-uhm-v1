@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -26,23 +27,16 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
     profile.sleep,
   ].filter(Boolean);
 
-  // Use imageUrl (preferred) and fallback to imageData (legacy) or default avatar
+  // Use imageData (bytes) for profile image, fallback to default avatar
   const getImageSrc = () => {
-    // prefer the URL field from the current schema
-    if (profile.imageUrl) {
-      return profile.imageUrl;
-    }
-
-    // legacy support: read imageData if present in DB (cast to any to avoid TS error)
-    const legacyImageData = (profile as any).imageData;
-    if (legacyImageData) {
+    if (profile.imageData) {
+      // Convert Buffer/Uint8Array to base64 string
       const base64 =
         typeof Buffer !== 'undefined'
-          ? Buffer.from(legacyImageData).toString('base64')
-          : btoa(String.fromCharCode(...new Uint8Array(legacyImageData as any)));
+          ? Buffer.from(profile.imageData).toString('base64')
+          : btoa(String.fromCharCode(...new Uint8Array(profile.imageData as any)));
       return `data:image/jpeg;base64,${base64}`;
     }
-
     return '/uploads/default.jpg';
   };
 
