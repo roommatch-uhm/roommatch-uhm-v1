@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 
 interface RoommateDirectoryProps {
   profiles: Profile[];
-  currentUserProfile: Profile;
+  currentUserProfile?: Profile; // <-- allow undefined
 }
 
 const SOCIAL_OPTIONS = ['Introvert', 'Ambivert', 'Extrovert', 'Unsure'] as const;
@@ -261,8 +261,9 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
   };
 
   // apply filters: search + budget range + social (multi-select)
-  const filteredProfiles = profiles
-    .filter((p) => String(p.id) !== String(currentUserProfile.id)) // Ensure both are strings for comparison
+  const filteredProfiles = profiles.filter(
+    (p) => !currentUserProfile || p.userId !== currentUserProfile.userId
+  )
     .filter((p) => {
       const matchesSearch =
         p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -291,6 +292,9 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
     const bForCompat = { ...b, imageAddedAt: b.imageAddedAt ? b.imageAddedAt.toISOString() : null } as any;
     return calculateCompatibility(currentForCompat, bForCompat) - calculateCompatibility(currentForCompat, aForCompat);
   });
+
+  console.log('Current user profile userId:', currentUserProfile.userId);
+  console.log('All profile userIds:', profiles.map(p => p.userId));
 
   return (
     <Container className="py-4">
