@@ -40,7 +40,8 @@ export async function createProfile(profile: {
     },
   });
 
-  return created;
+  // Return both the created profile and a redirect path
+  return { profile: created, redirectTo: '/profile' };
 }
 
 export async function editProfile(
@@ -73,7 +74,8 @@ export async function editProfile(
     data: updateData,
   });
 
-  return updated;
+  // Return both the updated profile and a redirect path
+  return { profile: updated, redirectTo: '/profile' };
 }
 
 export async function getProfileByUserId(userId: number): Promise<Profile | null> {
