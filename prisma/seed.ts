@@ -97,10 +97,8 @@ async function main() {
     // but fall back to a reduced payload if the client/db rejects unknown args.
     const profilePayload: any = {
       userId: user.id,
-      imageUrl: account.image || null,
-      imageKey: null,
-      imageSource: null,
-      imageAddedAt: account.image ? new Date() : null,
+      imageData: account.imageData ? Buffer.from(account.imageData.data) : undefined,
+      imageAddedAt: account.imageData ? new Date() : null,
       name: account.name || '',
       description: account.description || '',
       clean: account.clean || '',
