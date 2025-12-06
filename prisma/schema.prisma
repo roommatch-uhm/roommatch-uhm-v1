@@ -60,10 +60,8 @@ model Answer {
 model Profile {
   id           Int      @id @default(autoincrement())
   userId       Int      @unique
-  user         User     @relation(fields: [userId], references: [id])
-  imageUrl     String?
-  imageKey     String?
-  imageSource  String?
+  user         User     @relation(fields: [userId], references: [id]) // added opposite relation
+  imageData    Bytes?
   imageAddedAt DateTime?
   name         String
   description  String

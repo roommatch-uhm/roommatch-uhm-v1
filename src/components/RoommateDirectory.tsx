@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -10,7 +11,7 @@ import { useRouter } from 'next/navigation';
 
 interface RoommateDirectoryProps {
   profiles: Profile[];
-  currentUserProfile: Profile | null;
+  currentUserProfile: Profile;
 }
 
 const SOCIAL_OPTIONS = ['Introvert', 'Ambivert', 'Extrovert', 'Unsure'] as const;
@@ -260,22 +261,22 @@ const RoommateDirectory: React.FC<RoommateDirectoryProps> = ({
   };
 
   // apply filters: search + budget range + social (multi-select)
-  const filteredProfiles = profiles
-    .filter((p) => p.id !== currentUserProfile.id) // <-- Exclude current user's profile
-    .filter((p) => {
-      const matchesSearch =
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.description.toLowerCase().includes(search.toLowerCase());
+  const filteredProfiles = profiles.filter((p) => {
+    const matchesSearch =
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.description.toLowerCase().includes(search.toLowerCase());
 
-      const budgetFilterActive = !(minBudget === minAvailable && maxBudget === maxAvailable);
-      const matchesBudget = budgetFilterActive
-        ? typeof p.budget === 'number' && p.budget >= minBudget && p.budget <= maxBudget
-        : true;
+    // if user hasn't moved the slider (full range), treat as no budget filter
+    const budgetFilterActive = !(minBudget === minAvailable && maxBudget === maxAvailable);
 
-      const matchesSocial = socialFilter.length ? socialFilter.includes(p.social) : true;
+    const matchesBudget = budgetFilterActive
+      ? typeof p.budget === 'number' && p.budget >= minBudget && p.budget <= maxBudget
+      : true;
 
-      return matchesSearch && matchesBudget && matchesSocial;
-    });
+    const matchesSocial = socialFilter.length ? socialFilter.includes(p.social) : true;
+
+    return matchesSearch && matchesBudget && matchesSocial;
+  });
 
   // Sort by compatibility (highest first)
   // convert Date fields to strings for the compatibility util (ProfileAnswers expects string|number|null)

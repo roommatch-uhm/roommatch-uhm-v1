@@ -1,8 +1,7 @@
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { NextRequest } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 
 interface RouteParams {
   params: {
@@ -10,42 +9,24 @@ interface RouteParams {
   };
 }
 
-export async function GET(_req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
-  const id = Number(params.id);
-  if (Number.isNaN(id)) return new NextResponse('Invalid id', { status: 400 });
-
+export async function GET(req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   const profile = await prisma.profile.findUnique({
-    where: { id },
-    select: { imageUrl: true },
+    where: { id: Number(params.id) },
+    select: { imageData: true },
   });
 
-  if (!profile?.imageUrl) {
+  if (!profile?.imageData) {
     return new NextResponse('Image not found', { status: 404 });
   }
 
-  const imageUrl = profile.imageUrl;
+  // Convert Buffer to Uint8Array for NextResponse
+  const uint8 = new Uint8Array(profile.imageData as Buffer);
 
-  // Serve local images stored under public/ when path starts with '/'
-  if (imageUrl.startsWith('/')) {
-    const filePath = path.join(process.cwd(), 'public', imageUrl.replace(/^\//, ''));
-    try {
-      const data = await fs.promises.readFile(filePath);
-      const ext = path.extname(filePath).toLowerCase();
-      const contentType =
-        ext === '.png' ? 'image/png' :
-        ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' :
-        ext === '.webp' ? 'image/webp' :
-        'application/octet-stream';
-
-      return new NextResponse(data, {
-        status: 200,
-        headers: { 'Content-Type': contentType, 'Content-Length': String(data.length) },
-      });
-    } catch (e) {
-      return new NextResponse('File not found', { status: 404 });
-    }
-  }
-
-  // Otherwise redirect to external image URL
-  return NextResponse.redirect(imageUrl);
+  return new NextResponse(uint8, {
+    status: 200,
+    headers: {
+      'Content-Type': 'image/jpeg', // Change if you store PNG, etc.
+      'Content-Length': String(uint8.length),
+    },
+  });
 }

@@ -30,6 +30,7 @@ export async function createProfile(profile: {
       user: { connect: { id: profile.userId } },
       name: profile.name,
       description: profile.description ?? '',
+      imageData: profile.imageData ?? null,
       imageAddedAt: profile.imageData ? new Date() : undefined,
       clean: profile.clean,
       budget: profile.budget,
@@ -58,6 +59,7 @@ export async function editProfile(
   const updateData: any = {
     ...(updates.name !== undefined && { name: updates.name }),
     ...(updates.description !== undefined && { description: updates.description }),
+    ...(updates.imageData !== undefined && { imageData: updates.imageData }),
     ...(updates.clean !== undefined && { clean: updates.clean }),
     ...(updates.budget !== undefined && { budget: updates.budget }),
     ...(updates.social !== undefined && { social: updates.social }),
@@ -65,6 +67,7 @@ export async function editProfile(
     ...(updates.sleep !== undefined && { sleep: updates.sleep }),
     ...(updates.imageData !== undefined && updates.imageData ? { imageAddedAt: new Date() } : {}),
   };
+
   const updated = await prisma.profile.update({
     where: { id: profileId },
     data: updateData,
