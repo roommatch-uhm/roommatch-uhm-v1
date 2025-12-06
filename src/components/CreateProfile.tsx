@@ -90,7 +90,6 @@ export default function CreateUserProfile() {
     formData.append('sleep', data.sleep);
     formData.append('userId', userIdStr);
 
-    // Append file directly from input
     if (fileInput.current?.files?.[0]) {
       formData.append('image', fileInput.current.files[0]);
     }
@@ -101,8 +100,10 @@ export default function CreateUserProfile() {
         body: formData,
       });
       if (!res.ok) throw new Error(await res.text());
+      const result = await res.json(); // Expect { redirectTo: '/profile', ... }
       swal('Success', 'Your Profile has been saved', 'success', { timer: 1500 });
-      router.push('/profile');
+      // Force reload by adding a unique query string
+      router.replace(`/profile?refresh=${Date.now()}`);
     } catch (err: any) {
       swal('Error', err?.message || 'Failed to create profile', 'error');
     }

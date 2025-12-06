@@ -102,8 +102,11 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       });
 
       if (!res.ok) throw new Error(await res.text());
+      const result = await res.json();
       swal('Success', 'Profile updated', 'success', { timer: 1200 });
-      router.push('/profile');
+
+      // Force reload by adding a unique query string
+      router.replace(`/profile?refresh=${Date.now()}`);
     } catch (err: any) {
       console.error('editProfile error', err);
       swal('Error', err?.message || 'Failed to update profile', 'error');

@@ -153,7 +153,7 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
         <Link href="/messages" style={{ color: '#2575fc', fontWeight: 600 }}>
           Chat
         </Link>
-        <Link href={`/edit/${profile.id}`} style={{ color: '#2575fc', fontWeight: 600 }}>
+        <Link href={`/edit/${profile.id}?refresh=${Date.now()}`} style={{ color: '#2575fc', fontWeight: 600 }}>
           Edit
         </Link>
       </Card.Footer>
