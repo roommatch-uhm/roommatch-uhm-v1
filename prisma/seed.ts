@@ -1,6 +1,7 @@
 import { PrismaClient, Role } from '@prisma/client';
 import { hash } from 'bcrypt';
 import * as config from '../config/settings.development.json';
+import profiles from './seed-data/accounts.json';
 
 const prisma = new PrismaClient();
 
@@ -34,7 +35,15 @@ async function main() {
 
   await Promise.all(upsertUserPromises);
 
-  console.log('Seeding complete!');
+  console.log('User seeding complete!');
+
+  if (profiles && profiles.length > 0) {
+    console.log('Profiles to seed:', profiles.length);
+    await prisma.profile.createMany({
+      data: profiles,
+      skipDuplicates: true,
+    });
+    console.log('Profile seeding complete!');
 }
 
 main()
