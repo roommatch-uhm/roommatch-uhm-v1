@@ -1,6 +1,7 @@
 import { PrismaClient, Role } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import * as config from '../config/settings.development.json';
+import profiles from './seed-data/accounts.json';
 
 const prisma = new PrismaClient();
 
@@ -97,10 +98,8 @@ async function main() {
     // but fall back to a reduced payload if the client/db rejects unknown args.
     const profilePayload: any = {
       userId: user.id,
-      imageUrl: account.image || null,
-      imageKey: null,
-      imageSource: null,
-      imageAddedAt: account.image ? new Date() : null,
+      imageData: account.imageData ? Buffer.from(account.imageData.data) : undefined,
+      imageAddedAt: account.imageData ? new Date() : null,
       name: account.name || '',
       description: account.description || '',
       clean: account.clean || '',
@@ -148,7 +147,15 @@ async function main() {
 
   await Promise.all(upsertUserPromises);
 
-  console.log('Seeding complete!');
+  console.log('User seeding complete!');
+
+  if (profiles && profiles.length > 0) {
+    console.log('Profiles to seed:', profiles.length);
+    await prisma.profile.createMany({
+      data: profiles,
+      skipDuplicates: true,
+    });
+    console.log('Profile seeding complete!');
 }
 
 main()

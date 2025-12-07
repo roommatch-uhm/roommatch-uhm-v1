@@ -1,15 +1,28 @@
+import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
-import { Profile } from '@prisma/client';
 import RoommateDirectory from '@/components/RoommateDirectory';
+import authOptions from '@/lib/authOptions';
 
 const RoommateDirectoryPage = async () => {
-  // Fetch profiles server-side
-  const profiles: Profile[] = await prisma.profile.findMany();
+  // Fetch profiles and include related user
+  const profiles = await prisma.profile.findMany({
+    include: { user: true }
+  });
 
-  // Use the first profile as the current user profile (fallback)
-  const currentUserProfile: Profile = profiles[0] as Profile;
+  const session = await getServerSession(authOptions);
+  const currentUserEmail = session?.user?.email;
 
-  return <RoommateDirectory profiles={profiles} currentUserProfile={currentUserProfile} />;
+  // Find the profile for the logged-in user by UHemail
+  const currentUserProfile = profiles.find(
+    (p) => p.user?.UHemail === currentUserEmail
+  );
+
+  return (
+    <RoommateDirectory
+      profiles={profiles}
+      currentUserProfile={currentUserProfile}
+    />
+  );
 };
 
 export default RoommateDirectoryPage;
