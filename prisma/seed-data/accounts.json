@@ -1,0 +1,132 @@
+[
+    {
+        "image": "https://media.istockphoto.com/id/1133530353/photo/portrait-of-smiling-young-man-on-terrace-in-city.jpg?s=612x612&w=0&k=20&c=mnpxKLo6x2uR4N9ilLs-9Dx7_cVAjkMOlkeHz1FzItg=",
+        "name": "Alex Kim",
+        "description": "I enjoy cooking with roommates and I try to keep common areas tidy.",
+        "clean": "good",
+        "budget": "1500",
+        "social": "Unsure",
+        "study": "None",
+        "sleep": "Night_Owl"
+    },
+    {
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMdBuvbsYu7WYAAUY2AqSQRGNESsYdkucDkQ&s",
+        "name": "Jacey Brown",
+        "description": "I'm an early riser who loves quiet mornings. Would prefer to have my own room, but open to whatever!",
+        "clean": "fair",
+        "budget": "1750",
+        "social": "Extrovert",
+        "study": "Regular",
+        "sleep": "Early_Bird"
+    },
+    {
+        "image": "https://media.istockphoto.com/id/1282821098/photo/happy-young-man-in-the-city.jpg?s=612x612&w=0&k=20&c=KUajS9u8aPbKPoDh7ZUaHEhasFJyjsKqzAnou7xfXCc=",
+        "name": "Max Sawyer",
+        "description": "As long as we get along I'm easy-going. I love getting up early to run before classes, but I don't mind a messy house.",
+        "clean": "poor",
+        "budget": "1300",
+        "social": "Extrovert",
+        "study": "Regular",
+        "sleep": "Early_Bird"
+    },
+    {
+        "image": "data:image/jpeg;base64,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",
+        "name": "Sage Miller",
+        "description": "It is a must that my roommates also like going out and having fun on the weekends. I can be messy but I always clean up after myself, looking for someone who is the same!",
+        "clean": "good",
+        "budget": "1000",
+        "social": "Extrovert",
+        "study": "None",
+        "sleep": "Night_Owl"
+    },
+    {
+        "image": "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?cs=srgb&dl=pexels-vinicius-wiesehofer-289347-1130626.jpg&fm=jpg",
+        "name": "Milly Lee",
+        "description": "I enjoy cooking and baking in my free time, but my course load is pretty heavy so I need a quiet place to study.",
+        "clean": "good",
+        "budget": "1400",
+        "social": "Ambivert",
+        "study": "Cramming",
+        "sleep": "Flexible"
+    },
+    {
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6zZ0zpFOca2gwFjANkK4zRozHycxu_F366g&s",
+        "name": "Jacob Williams",
+        "description": "I like to keep things super tidy and organized. I also prioritize school over everything else, so I need a roommate who understands that.",
+        "clean": "excellent",
+        "budget": "1600",
+        "social": "Unsure",
+        "study": "Cramming",
+        "sleep": "Early_Bird"
+    },
+    {
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzWM2yzj5CkccjbtOhqYxz3d2o3c_iRN_tKA&s",
+        "name": "Maya Lopez",
+        "description": "Would love a social apartment with some game/movie nights and some quiet nights to study.",
+        "clean": "fair",
+        "budget": "1300",
+        "social": "Extrovert",
+        "study": "Regular",
+        "sleep": "Flexible"
+    },
+    {
+        "image": "",
+        "name": "Chris Nguyen",
+        "description": "Early riser who prefers organized spaces and clear communication.",
+        "clean": "excellent",
+        "budget": "900",
+        "social": "Unsure",
+        "study": "Regular",
+        "sleep": "Night_Owl"
+    },
+    {
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ9Yf92meLNpAnVV99uCNLOxFznGt-VaSuWwQ&s",
+        "name": "Lia Shapiro",
+        "description": "Super outgoing, always down for social activities and chatting. Would love to room with people who don't mind a bit of noise.",
+        "clean": "fair",
+        "budget": "1600",
+        "social": "Extrovert",
+        "study": "None",
+        "sleep": "Night_Owl"
+    },
+    {
+        "image": "https://thumbs.dreamstime.com/b/young-adult-woman-4725883.jpg",
+        "name": "Chloe Davis",
+        "description": "I'm a huge athlete, so I need a roommate who doesn't mind some noise in the mornings. I prefer to have a clean space.",
+        "clean": "good",
+        "budget": "1500",
+        "social": "Ambivert",
+        "study": "Regular",
+        "sleep": "Early_Bird"
+    },
+    {
+        "image": "https://img.freepik.com/free-photo/handsome-man-with-crossed-arms-grey-background_23-2148113913.jpg?semt=ais_hybrid&w=740&q=80",
+        "name": "Jackson Hayes",
+        "description": "Down for whatever, just need a place to crash after practice. I don't have much time to clean but I won't be around much.",
+        "clean": "poor",
+        "budget": "1100",
+        "social": "Extrovert",
+        "study": "None",
+        "sleep": "Night_Owl"
+    },
+    {
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlL8W_t21HXgeOJMgQqJ_fjmWD3GRwZO0JMQ&s",
+        "name": "Addie Kramer",
+        "description": "Looking for a quiet and clean living environment to focus on my studies. I prefer to keep to myself but am open to occasional socializing.",
+        "clean": "excellent",
+        "budget": "800",
+        "social": "Introvert",
+        "study": "Cramming",
+        "sleep": "Flexible"
+    },
+    {
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSo4KSQjq_WyK-_hNkjAJyDSsbvR_HcoQaWyg&s",
+        "name": "Julian Torres",
+        "description": "I'm pretty laid-back and easy-going. I enjoy social activities but also value my alone time. Cleanliness is important to me, but I understand that everyone has different standards.",
+        "clean": "good",
+        "budget": "1350",
+        "social": "Extrovert",
+        "study": "Regular",
+        "sleep": "Night_Owl"
+    }
+]
