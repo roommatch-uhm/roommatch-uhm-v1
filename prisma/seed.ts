@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient, Role, Prisma } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import * as config from '../config/settings.development.json';
 import profiles from './seed-data/accounts.json';
@@ -127,6 +127,7 @@ async function main() {
         delete reduced.imageKey;
         delete reduced.imageSource;
         delete reduced.imageAddedAt;
+        delete reduced.imageData;
 
         try {
           await prisma.profile.upsert({
@@ -151,11 +152,37 @@ async function main() {
 
   if (profiles && profiles.length > 0) {
     console.log('Profiles to seed:', profiles.length);
-    await prisma.profile.createMany({
-      data: profiles,
-      skipDuplicates: true,
-    });
-    console.log('Profile seeding complete!');
+    const profileCreateManyData: Prisma.ProfileCreateManyInput[] = [];
+    for (const acc of (profiles as unknown as SeedAccount[])) {
+      if (!acc.UHemail) continue;
+      const user = await prisma.user.findUnique({ where: { UHemail: acc.UHemail } });
+      if (!user) {
+        console.warn('No user found for profile UHemail:', acc.UHemail);
+        continue;
+      }
+      profileCreateManyData.push({
+        userId: user.id,
+        name: acc.name ?? user.username ?? acc.UHemail.split('@')[0],
+        description: acc.description ?? '',
+        clean: (acc.clean as any) ?? 'Moderate',
+        budget: acc.budget ?? null,
+        social: acc.social ?? 'Moderate',
+        study: (acc.study as any) ?? 'Regular',
+        sleep: (acc.sleep as any) ?? 'Flexible',
+        // omit image fields if DB schema doesn't include them
+      });
+    }
+    if (profileCreateManyData.length > 0) {
+      await prisma.profile.createMany({
+        data: profileCreateManyData,
+        skipDuplicates: true,
+      });
+    } else {
+      console.log('No profile rows to insert.');
+    }
+  }
+
+  console.log('Profile seeding complete!');
 }
 
 main()
