@@ -1,158 +1,244 @@
 'use server';
 
-// Import Prisma client and types
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient, Profile, Role } from '@prisma/client';
 import { hash } from 'bcrypt';
-import { redirect } from 'next/navigation';
+import { validatePassword } from './passwordValidator';
 
-const prisma = new PrismaClient();
+// Safe global prisma singleton for dev
+declare global {
+  // eslint-disable-next-line no-var
+  var __prisma: PrismaClient | undefined;
+}
+const prisma: PrismaClient = global.__prisma ?? new PrismaClient();
+if (process.env.NODE_ENV !== 'production') global.__prisma = prisma;
 
-/**
- * Create a new user profile in the database.
- * @param credentials - An object containing the user's email,
- *  password, role, roommate status, budget, firstName, and lastName.
- */
+/* ------- Profile helpers (imageData only, no Supabase) ------- */
+
+export async function createProfile(profile: {
+  userId: number;
+  name: string;
+  description?: string | null;
+  imageData?: Buffer | null;
+  clean: 'excellent' | 'good' | 'fair' | 'poor';
+  budget?: number | null;
+  social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
+  study: 'Cramming' | 'Regular' | 'None';
+  sleep: 'Early_Bird' | 'Night_Owl' | 'Flexible';
+}) {
+  const created = await prisma.profile.create({
+    data: {
+      user: { connect: { id: profile.userId } },
+      name: profile.name,
+      description: profile.description ?? '',
+      imageData: profile.imageData ?? null,
+      imageAddedAt: profile.imageData ? new Date() : undefined,
+      clean: profile.clean,
+      budget: profile.budget,
+      social: profile.social,
+      study: profile.study,
+      sleep: profile.sleep,
+    },
+  });
+
+  // Return both the created profile and a redirect path
+  return { profile: created, redirectTo: '/profile' };
+}
+
+export async function editProfile(
+  profileId: number,
+  updates: {
+    name?: string;
+    description?: string;
+    imageData?: Buffer | null;
+    clean?: 'excellent' | 'good' | 'fair' | 'poor';
+    budget?: number | null;
+    social?: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
+    study?: 'Cramming' | 'Regular' | 'None';
+    sleep?: 'Early_Bird' | 'Night_Owl' | 'Flexible';
+  },
+) {
+  const updateData: any = {
+    ...(updates.name !== undefined && { name: updates.name }),
+    ...(updates.description !== undefined && { description: updates.description }),
+    ...(updates.imageData !== undefined && { imageData: updates.imageData }),
+    ...(updates.clean !== undefined && { clean: updates.clean }),
+    ...(updates.budget !== undefined && { budget: updates.budget }),
+    ...(updates.social !== undefined && { social: updates.social }),
+    ...(updates.study !== undefined && { study: updates.study }),
+    ...(updates.sleep !== undefined && { sleep: updates.sleep }),
+    ...(updates.imageData !== undefined && updates.imageData ? { imageAddedAt: new Date() } : {}),
+  };
+
+  const updated = await prisma.profile.update({
+    where: { id: profileId },
+    data: updateData,
+  });
+
+  // Return both the updated profile and a redirect path
+  return { profile: updated, redirectTo: '/profile' };
+}
+
+export async function getProfileByUserId(userId: number): Promise<Profile | null> {
+  return prisma.profile.findUnique({ where: { userId } });
+}
+
+export async function getProfileById(profileId: number) {
+  return prisma.profile.findUnique({
+    where: { id: profileId },
+  });
+}
+
+/* User helpers remain unchanged */
 export async function createUserProfile({
+  username,
   UHemail,
   password,
   role,
   roommateStatus,
   budget,
-  firstName,
-  lastName,
 }: {
+  username: string;
   UHemail: string;
   password: string;
   role?: Role;
   roommateStatus?: string;
-  budget: number;
-  firstName: string;
-  lastName: string;
+  budget?: number;
 }) {
-  // Check if the user already exists
-  const existingUser = await prisma.user.findUnique({
-    where: { UHemail },
-  });
+  // Validate password security requirements on server-side
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    throw new Error(
+      `Password does not meet security requirements: ${passwordValidation.errors.join(', ')}`,
+    );
+  }
 
-  if (existingUser) {
+  // Ensure email unique
+  const existingByEmail = await prisma.user.findUnique({ where: { UHemail } });
+  if (existingByEmail) {
     throw new Error('Email is already taken');
   }
 
-  // Hash the password before storing it
+  // Ensure username unique (only if provided)
+  if (username) {
+    const existingByUsername = await prisma.user.findUnique({ where: { username } as any });
+    if (existingByUsername) {
+      throw new Error('Username is already taken');
+    }
+  }
+
   const hashedPassword = await hash(password, 10);
 
-  // Create a new user profile
   const user = await prisma.user.create({
     data: {
       UHemail,
+      username,
       password: hashedPassword,
-      role: role || Role.USER,
-      roommateStatus: roommateStatus || 'Looking',
-      budget, // Ensure budget is included
-      firstName, // Add firstName
-      lastName, // Add lastName
+      role: role ?? Role.USER,
+      preferences: null,
+      roommateStatus: roommateStatus ?? 'Looking',
+      budget: budget ?? null,
     },
   });
 
   return user;
 }
 
-export async function createProfile(profile: {
-  name: string;
-  description: string;
-  image?: string | null;
-  clean: string;
-  budget: number;
-  social: string;
-  study: string;
-  sleep: string;
-}
-) {
-  // console.log(`createProfile data: ${JSON.stringify(profile, null, 2)}`);
-  await prisma.profile.create({
-    data: {
-      name: profile.name || '',
-      description: profile.description || '',
-      image: profile.image || '',
-      clean: profile.clean || '',
-      budget: profile.budget || 0,
-      social: profile.social || '',
-      study: profile.study || '',
-      sleep: profile.sleep || '',
-    },
-  });
-  // After adding, redirect to the home page
-  redirect('/profile');
-}
-
-/**
- * Update a user's profile.
- * @param userId - The ID of the user to update.
- * @param updates - An object containing the fields to update (e.g., preferences, roommateStatus).
- */
-export async function updateUserProfile(
-  userId: number,
-  {
-    preferences,
-    roommateStatus,
-    budget,
-  }: {
-    preferences?: string;
-    roommateStatus?: string;
-    budget?: number;
-  },
-) {
-  const updatedUser = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      ...(preferences !== undefined && { preferences }),
-      ...(roommateStatus !== undefined && { roommateStatus }),
-      ...(budget !== undefined && { budget }),
-    },
-  });
-
-  return updatedUser;
-}
-
-/**
- * Retrieve a user's profile.
- * @param userId - The ID of the user whose profile is to be fetched.
- */
-export async function getUserProfile(userId: number) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!user) {
-    throw new Error('User not found');
+export async function changeUserPassword(UHemail: string, newPassword: string) {
+  // Validate password security requirements on server-side
+  const passwordValidation = validatePassword(newPassword);
+  if (!passwordValidation.isValid) {
+    throw new Error(
+      `Password does not meet security requirements: ${passwordValidation.errors.join(', ')}`,
+    );
   }
 
-  return user;
-}
-
-/**
- * Change the password for an existing user profile.
- * @param userId - The ID of the user whose password is to be changed.
- * @param newPassword - The new password to set.
- */
-export async function changeUserPassword(userId: number, newPassword: string) {
   const hashedPassword = await hash(newPassword, 10);
-  const updatedUser = await prisma.user.update({
-    where: { id: userId },
+  return prisma.user.update({
+    where: { UHemail },
     data: { password: hashedPassword },
   });
-
-  return updatedUser;
 }
 
-/**
- * Delete a user's profile.
- * @param userId - The ID of the user to delete.
- */
-export async function deleteUserProfile(userId: number) {
-  const deletedUser = await prisma.user.delete({
+export async function updateUserProfile(userId: number, updates: {
+  username?: string;
+  UHemail?: string;
+  password?: string;
+  role?: Role;
+  roommateStatus?: string;
+  budget?: number;
+}) {
+  const data: any = { ...updates };
+  if (updates.password) {
+    // Validate password security requirements on server-side
+    const passwordValidation = validatePassword(updates.password);
+    if (!passwordValidation.isValid) {
+      throw new Error(
+        `Password does not meet security requirements: ${passwordValidation.errors.join(', ')}`,
+      );
+    }
+    data.password = await hash(updates.password, 10);
+  }
+  return prisma.user.update({
     where: { id: userId },
+    data,
+  });
+}
+
+/* Chat / message helpers remain unchanged */
+export async function createChat(userId1: number, userId2: number) {
+  const user1 = await prisma.user.findUnique({ where: { id: userId1 } });
+  const user2 = await prisma.user.findUnique({ where: { id: userId2 } });
+  if (!user1 || !user2) {
+    throw new Error('One or both users not found');
+  }
+
+  const existingChat = await prisma.chat.findFirst({
+    where: {
+      AND: [
+        { members: { some: { id: userId1 } } },
+        { members: { some: { id: userId2 } } },
+      ],
+    },
+    include: { members: true },
   });
 
-  return deletedUser;
+  if (existingChat) {
+    return existingChat;
+  }
+
+  return prisma.chat.create({
+    data: {
+      members: {
+        connect: [{ id: userId1 }, { id: userId2 }],
+      },
+    },
+    include: { members: true },
+  });
+}
+
+export async function sendMessage(chatId: number, senderId: number, content: string) {
+  const chat = await prisma.chat.findUnique({
+    where: { id: chatId },
+    include: { members: true },
+  });
+  if (!chat || !chat.members.some(u => u.id === senderId)) {
+    throw new Error('Not authorized');
+  }
+  return prisma.message.create({
+    data: { chatId, senderId, content },
+  });
+}
+
+export async function getChatMessages(chatId: number, userId: number) {
+  const chat = await prisma.chat.findUnique({
+    where: { id: chatId },
+    include: { members: true },
+  });
+  if (!chat || !chat.members.some(u => u.id === userId)) {
+    throw new Error('Not authorized');
+  }
+  return prisma.message.findMany({
+    where: { chatId },
+    orderBy: { timestamp: 'asc' },
+  });
 }

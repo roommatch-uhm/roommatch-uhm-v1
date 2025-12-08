@@ -11,10 +11,10 @@ const SignIn = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.target as typeof e.target & {
-      email: { value: string };
+      UHemail: { value: string };
       password: { value: string };
     };
-    const email = target.email.value;
+    const email = target.UHemail.value;
     const password = target.password.value;
 
     if (!email.endsWith('@hawaii.edu')) {
@@ -26,7 +26,7 @@ const SignIn = () => {
     const callback = params.get('callbackUrl') ?? '/list';
     const result = await signIn('credentials', {
       callbackUrl: callback,
-      email,
+      UHemail: email,
       password,
       redirect: false, // Prevent auto-redirect so we can handle errors
     });
@@ -54,7 +54,7 @@ const SignIn = () => {
                   {error && <div className="text-danger mb-2">{error}</div>}
                   <Form.Group controlId="formBasicEmail">
                     <Form.Label>Email</Form.Label>
-                    <input name="email" type="text" className="form-control" />
+                    <input name="UHemail" type="text" className="form-control" />
                   </Form.Group>
                   <Form.Group>
                     <Form.Label>Password</Form.Label>

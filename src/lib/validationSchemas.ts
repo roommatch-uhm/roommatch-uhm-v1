@@ -1,16 +1,39 @@
 import * as Yup from 'yup';
+import { validatePassword } from './passwordValidator';
+
+/**
+ * Maximum file size for profile pictures (5MB)
+ */
+export const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
+/**
+ * Allowed image MIME types for profile pictures
+ */
+export const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
 
 export const CreateProfileSchema = Yup.object({
   name: Yup.string().required('Name is required'),
   description: Yup.string()
     .max(500, 'Description must be at most 500 characters')
     .required('Description is required'),
-  image: Yup.string().url('Image must be a valid URL').nullable(),
+  imageData: Yup.mixed()
+    .nullable()
+    .test(
+      'file-size',
+      'Image must be less than 5MB',
+      (value) => !value || (value instanceof Uint8Array && value.byteLength <= MAX_PROFILE_IMAGE_SIZE)
+    ),
   clean: Yup.string()
     .oneOf(['excellent', 'good', 'fair', 'poor'])
     .required('Please select a cleanliness level'),
-  // Match Prisma enum values (Budget: Low | Medium | High)
-  budget: Yup.number().positive('Budget must be positive').nullable(),
+  // allow zero budget; use min(0) instead of .positive()
+  budget: Yup.number().min(0, 'Budget must be 0 or greater').nullable(),
   // Match Prisma enum values (Social: Introvert | Ambivert | Extrovert | Unsure)
   social: Yup.string()
     .oneOf(['Introvert', 'Ambivert', 'Extrovert', 'Unsure'])
@@ -25,13 +48,28 @@ export const CreateProfileSchema = Yup.object({
     .required('Please select a sleep level'),
 });
 
+// reuse same rules for editing
+export const EditProfileSchema = CreateProfileSchema;
+
 const AddUserSchema = Yup.object().shape({
   firstName: Yup.string().required('First name is required'),
   lastName: Yup.string().required('Last name is required'),
   UHemail: Yup.string().email('Invalid email').required('UH email is required'),
   password: Yup.string()
-    .min(6, 'Password must be at least 6 characters')
-    .required('Password is required'),
+    .required('Password is required')
+    .test('password-strength', function (value) {
+      if (!value) return this.createError({ message: 'Password is required' });
+
+      const result = validatePassword(value);
+
+      if (!result.isValid) {
+        return this.createError({
+          message: result.errors[0] || 'Password does not meet security requirements',
+        });
+      }
+
+      return true;
+    }),
   roommateStatus: Yup.string()
     .oneOf(['Looking', 'Not Looking', 'Has Roommate'])
     .required('Roommate status is required'),

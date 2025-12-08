@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import type { NextRequest } from 'next/server';
 import type { Profile } from '@prisma/client';
 
 interface RouteParams {
@@ -13,23 +13,58 @@ export async function GET(req: NextRequest, { params }: RouteParams): Promise<Ne
   const profile: Profile | null = await prisma.profile.findUnique({
     where: { id: Number(params.id) },
   });
+  // Log image info using imageAddedAt and imageData size
+  console.log(
+    'API returning profile:',
+    profile?.name,
+    'imageAddedAt:',
+    profile?.imageAddedAt,
+    'imageData bytes:',
+    profile?.imageData ? (profile.imageData as Buffer).length : 0
+  );
   if (!profile) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(profile);
 }
 
-interface PutRouteParams {
-  params: {
-    id: string;
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const formData = await req.formData();
+  const imageFile = formData.get('image') as File | null;
+  let imageBuffer: Buffer | null = null;
+  if (imageFile) {
+    imageBuffer = Buffer.from(await imageFile.arrayBuffer());
+  }
+
+  const name = formData.get('name') as string;
+  const description = formData.get('description') as string;
+  const clean = formData.get('clean') as string;
+  const budget = formData.get('budget') ? Number(formData.get('budget')) : null;
+  const social = formData.get('social') as string;
+  const study = formData.get('study') as string;
+  const sleep = formData.get('sleep') as string;
+  const userId = Number(formData.get('userId'));
+
+  const data: any = {
+    user: { connect: { id: userId } },
+    name,
+    description,
+    clean,
+    budget,
+    social,
+    study,
+    sleep,
   };
-}
+  if (imageBuffer) {
+    data.imageData = imageBuffer;
+    data.imageAddedAt = new Date();
+  }
 
-interface UpdateProfileData extends Partial<Omit<Profile, 'id'>> {}
-
-export async function PUT(req: NextRequest, { params }: PutRouteParams): Promise<NextResponse> {
-  const data: UpdateProfileData = await req.json();
-  const updated = await prisma.profile.update({
-    where: { id: Number(params.id) },
-    data,
-  });
-  return NextResponse.json(updated);
+  try {
+    const updated = await prisma.profile.update({
+      where: { id: Number(params.id) },
+      data,
+    });
+    return NextResponse.json(updated);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
 }

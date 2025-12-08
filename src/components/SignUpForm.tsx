@@ -7,8 +7,11 @@ import * as Yup from 'yup';
 import { Card, Col, Container, Button, Form, Row } from 'react-bootstrap';
 import { createUserProfile } from '@/lib/dbActions';
 import { useState } from 'react';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
+import { validatePassword } from '@/lib/passwordValidator';
 
 type SignUpFormData = {
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -18,13 +21,30 @@ export default function SignUpForm() {
   const [serverError, setServerError] = useState('');
 
   const validationSchema = Yup.object().shape({
+    username: Yup.string()
+      .required('Username is required')
+      .min(3, 'Username must be at least 3 characters')
+      .max(20, 'Username must be at most 20 characters')
+      .matches(/^[a-zA-Z0-9._-]+$/, 'Only letters, numbers, dots, underscores, and hyphens allowed'),
     email: Yup.string()
       .required('Email is required')
       .email('Invalid email format')
       .matches(/@hawaii\.edu$/, 'Please use your @hawaii.edu email'),
     password: Yup.string()
       .required('Password is required')
-      .min(6, 'Password must be at least 6 characters'),
+      .test('password-strength', function (value) {
+        if (!value) return this.createError({ message: 'Password is required' });
+
+        const result = validatePassword(value);
+
+        if (!result.isValid) {
+          return this.createError({
+            message: result.errors[0] || 'Password does not meet security requirements',
+          });
+        }
+
+        return true;
+      }),
     confirmPassword: Yup.string()
       .required('Please confirm your password')
       .oneOf([Yup.ref('password')], 'Passwords must match'),
@@ -34,18 +54,21 @@ export default function SignUpForm() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<SignUpFormData>({
     resolver: yupResolver(validationSchema),
   });
 
+  // Watch password field for real-time strength indicator
+  const watchedPassword = watch('password') || '';
+
   const onSubmit = async (data: SignUpFormData) => {
     try {
       await createUserProfile({
+        username: data.username,
         UHemail: data.email,
         password: data.password,
-        firstName: '',
-        lastName: '',
         budget: 0,
         roommateStatus: 'Looking',
       });
@@ -53,7 +76,7 @@ export default function SignUpForm() {
       alert('Account created successfully! Redirecting...');
       await signIn('credentials', {
         callbackUrl: '/profile',
-        email: data.email,
+        identifier: data.username || data.email,
         password: data.password,
       });
     } catch (error) {
@@ -71,6 +94,17 @@ export default function SignUpForm() {
             <Card>
               <Card.Body>
                 <Form onSubmit={handleSubmit(onSubmit)}>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Username</Form.Label>
+                    <Form.Control
+                      type="text"
+                      {...register('username')}
+                      className={errors.username ? 'is-invalid' : ''}
+                    />
+                    <div className="invalid-feedback">{errors.username?.message}</div>
+                  </Form.Group>
+
                   <Form.Group className="mb-3">
                     <Form.Label>Email</Form.Label>
                     <Form.Control
@@ -89,6 +123,13 @@ export default function SignUpForm() {
                       className={errors.password ? 'is-invalid' : ''}
                     />
                     <div className="invalid-feedback">{errors.password?.message}</div>
+
+                    {/* Password Strength Indicator */}
+                    {watchedPassword && (
+                      <div className="mt-3">
+                        <PasswordStrengthIndicator password={watchedPassword} />
+                      </div>
+                    )}
                   </Form.Group>
 
                   <Form.Group className="mb-3">

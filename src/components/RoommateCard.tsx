@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Card, Image } from 'react-bootstrap';
+import React from 'react';
 import { Profile } from '@prisma/client';
 
 interface RoommateCardProps {
@@ -16,6 +17,21 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
     profile.study,
     profile.sleep,
   ].filter(Boolean);
+
+  // Use imageData (bytes) for profile image, fallback to default avatar
+  const getImageSrc = () => {
+    if (profile.imageData) {
+      // Convert Buffer/Uint8Array to base64 string
+      const base64 =
+        typeof Buffer !== 'undefined'
+          ? Buffer.from(profile.imageData).toString('base64')
+          : btoa(String.fromCharCode(...new Uint8Array(profile.imageData as any)));
+      return `data:image/jpeg;base64,${base64}`;
+    }
+    return '/uploads/default.jpg';
+  };
+
+  const imgSrc = getImageSrc();
 
   return (
     <Card className="h-100">
@@ -46,16 +62,24 @@ const RoommateCard = ({ profile }: RoommateCardProps) => {
               width: '50%',
               display: 'flex',
               justifyContent: 'center',
-              alignItems: 'flex-start', // align top
+              alignItems: 'flex-start',
             }}
           >
             <Image
-              src="/images/johndoe.jpg"
+              src={imgSrc}
+              alt={`${profile.name} profile`}
               rounded
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                const imgEl = e.currentTarget as HTMLImageElement;
+                imgEl.onerror = null;
+                imgEl.src = '/uploads/default.jpg';
+              }}
               style={{
                 width: '100%',
-                maxHeight: '200px', // smaller image
+                maxHeight: '350px',
+                height: 'auto',
                 objectFit: 'contain',
+                backgroundColor: '#f8f9fa',
               }}
             />
           </div>

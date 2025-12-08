@@ -2,45 +2,59 @@
   "defaultAccounts": [
     {
       "id": 1,
-      "firstName": "Bob",
-      "lastName": "The-Builder",
-      "UHemail": "admin@foo.com",
+      "UHemail": "admin@hawaii.edu",
+      "username": "admin1",
       "password": "changeme1",
       "role": "ADMIN",
       "preferences": "Prefers a clean, quiet environment. Non-smoker.",
       "roommateStatus": "Looking",
-      "budget": 1000.00
+      "budget": 1000,
+      "name": "Admin Bob",
+      "description": "I like building things and help keep common spaces tidy.",
+      "clean": "Very clean",
+      "social": "Moderate",
+      "study": "Focused",
+      "sleep": "Early riser"
     },
     {
       "id": 2,
-      "firstName": "John",
-      "lastName": "Doe",
-      "UHemail": "john@foo.com",
+      "UHemail": "john@hawaii.edu",
+      "username": "john1",
       "password": "changeme2",
       "role": "USER",
       "preferences": "Looking for a roommate who enjoys social activities and is easy-going.",
       "roommateStatus": "Looking",
-      "budget": 800.00
+      "budget": 800,
+      "name": "John",
+      "description": "Enjoys surfing, weekend BBQs, and meeting new people.",
+      "clean": "Clean",
+      "social": "High",
+      "study": "Casual",
+      "sleep": "Night owl"
     },
     {
       "id": 3,
-      "firstName": "Jane",
-      "lastName": "Smith",
-      "UHemail": "jane@foo.com",
+      "UHemail": "jane@hawaii.edu",
+      "username": "jane1",
       "password": "changeme3",
       "role": "USER",
       "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",
       "roommateStatus": "Has Roommate",
-      "budget": 900.00
+      "budget": 900,
+      "name": "Jane",
+      "description": "Enjoys quiet nights, good books, and tea.",
+      "clean": "Moderate",
+      "social": "Low",
+      "study": "Focused",
+      "sleep": "Early riser"
     },
     {
       "id": 4,
-      "firstName": "Milo",
-      "lastName": "Smith",
-      "UHemail": "milo@foo.com",
+      "UHemail": "milo@hawaii.edu",
+      "username": "milo1",
       "password": "changeme4",
       "role": "USER",
-      "preferences": "Prefers a calm living space. Likes quiet nights and good communication.",
+      "preferences": "Likes hiking, cooking, and low-key weekends.",
       "roommateStatus": "Has Roommate",
       "budget": 1100.00
     },
@@ -187,5 +201,13 @@
     "roommateStatus": "Looking",
     "budget": 1350.00
   }
+      "budget": 1100,
+      "name": "Milo",
+      "description": "Likes hiking, quiet weekends, and cooking.",
+      "clean": "Clean",
+      "social": "Moderate",
+      "study": "Regular",
+      "sleep": "Night owl"
+    }
   ]
 }

@@ -51,7 +51,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/matches" className="text-white text-decoration-none">
+                <Link href="/list" className="text-white text-decoration-none">
                   View RoomMatches
                 </Link>
               </li>
@@ -65,7 +65,12 @@ export default function Footer() {
         </div>
 
         <div className="text-center small mt-4 text-light">
-          © {new Date().getFullYear()} RoomMatch UHM — University of Hawaiʻi at Mānoa
+          <div>© {new Date().getFullYear()} RoomMatch UHM — University of Hawaiʻi at Mānoa</div>
+          <div className="mt-2">
+            <Link href="/support" className="text-white text-decoration-none">
+              Support and FAQs
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
