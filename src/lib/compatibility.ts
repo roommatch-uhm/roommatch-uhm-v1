@@ -36,6 +36,45 @@ export function calculateCompatibility(
   return Math.round((matchedWeight / totalWeight) * 100);
 }
 
+export function pickAnswersFromProfile(profile: any) {
+  return {
+    clean: profile?.clean ?? null,
+    budget: typeof profile?.budget === 'number' ? profile.budget : profile?.budget ? Number(profile.budget) : null,
+    social: profile?.social ?? null,
+    study: profile?.study ?? null,
+    sleep: profile?.sleep ?? null,
+    housingPreference: profile?.housingPreference ?? null,
+    locationPreference: profile?.locationPreference ?? null,
+    // add any other profile columns you will use for matching here
+  } as Record<string, string | number | null>;
+}
+
+export type MatchResult = {
+  profileId: number;
+  userId: number;
+  name?: string | null;
+  score: number;
+};
+
+/**
+ * Given a user's profile row and an array of other profile rows,
+ * returns MatchResult[] sorted descending by score.
+ */
+export function scoreProfilesForUser(userProfile: any, otherProfiles: any[]): MatchResult[] {
+  const me = pickAnswersFromProfile(userProfile);
+  const results: MatchResult[] = otherProfiles.map((p: any) => {
+    const other = pickAnswersFromProfile(p);
+    return {
+      profileId: p.id,
+      userId: p.userId,
+      name: p.name ?? null,
+      score: calculateCompatibility(me, other),
+    };
+  });
+  results.sort((a, b) => b.score - a.score);
+  return results;
+}
+
 // Example profiles for testing
 const alice = {
   clean: 'excellent',
