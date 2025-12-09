@@ -96,17 +96,23 @@ async function main() {
     // Upsert profile for this user using the correct user.id
     // Build profile payload; we will try to upsert with imageUrl fields first,
     // but fall back to a reduced payload if the client/db rejects unknown args.
+    const derivedName =
+      account.name ||
+      account.username ||
+      (account.UHemail ? account.UHemail.split('@')[0] : 'Unknown');
+    const derivedDescription = account.description ?? account.preferences ?? '';
+
     const profilePayload: any = {
       userId: user.id,
       imageData: account.imageData ? Buffer.from(account.imageData.data) : undefined,
       imageAddedAt: account.imageData ? new Date() : null,
-      name: account.name || '',
-      description: account.description || '',
-      clean: account.clean || '',
+      name: derivedName,
+      description: derivedDescription,
+      clean: account.clean ?? 'Moderate',
       budget: account.budget ?? null,
-      social: account.social || '',
-      study: account.study || '',
-      sleep: account.sleep || '',
+      social: account.social ?? 'Moderate',
+      study: account.study ?? 'Regular',
+      sleep: account.sleep ?? 'Flexible',
     };
 
     // Try Prisma upsert for profile, if it fails due to unknown args (schema mismatch),
@@ -162,13 +168,19 @@ async function main() {
       }
       profileCreateManyData.push({
         userId: user.id,
-        name: acc.name ?? user.username ?? acc.UHemail.split('@')[0],
-        description: acc.description ?? '',
-        clean: (acc.clean as any) ?? 'Moderate',
-        budget: acc.budget ?? null,
-        social: acc.social ?? 'Moderate',
-        study: (acc.study as any) ?? 'Regular',
-        sleep: (acc.sleep as any) ?? 'Flexible',
+        name:
+          acc.name ||
+          user.username ||
+          (acc.UHemail ? acc.UHemail.split('@')[0] : 'Unknown'),
+        description: acc.description ?? acc.preferences ?? '',
+        clean: String(acc.clean ?? 'Moderate'),
+        budget:
+          acc.budget !== undefined && acc.budget !== null
+            ? Number(acc.budget)
+            : null,
+        social: String(acc.social ?? 'Moderate'),
+        study: String(acc.study ?? 'Regular'),
+        sleep: String(acc.sleep ?? 'Flexible'),
         // omit image fields if DB schema doesn't include them
       });
     }
