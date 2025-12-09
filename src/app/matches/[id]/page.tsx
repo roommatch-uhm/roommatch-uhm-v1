@@ -17,7 +17,7 @@ type Profile = {
     social: string;
     study: string;
     sleep: string;
-    compatibilityScore: number;
+    compatibilityScore?: number; // optional until we fetch the score
     housingPreference: string;
     locationPreference: string;
 };
@@ -46,6 +46,37 @@ export default function profileDetailPage({ params }: { params: { id: string } }
     fetchProfile();
   }, [params.id]);
 
+  // Fetch compatibility score for this profile relative to the signed-in user
+  useEffect(() => {
+    const rawUserId = (session?.user as { id?: number | string } | undefined)?.id;
+    const myUserId: number | undefined =
+      typeof rawUserId === 'number'
+        ? rawUserId
+        : rawUserId
+        ? parseInt(String(rawUserId), 10)
+        : undefined;
+
+    if (!profile || !myUserId) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/compatibility?userId=${myUserId}`);
+        if (!res.ok) return;
+        const list = await res.json();
+        const match = Array.isArray(list) ? list.find((m: any) => m.userId === profile.userId) : null;
+        const score = match ? Math.round(match.score) : 0;
+        if (!cancelled) setProfile((p) => (p ? { ...p, compatibilityScore: score } : p));
+      } catch (e) {
+        console.error('Failed to load compatibility', e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.userId, session]);
+
   // Handler for starting a chat and redirecting
   const handleMessage = async () => {
     if (!myUserId || !profile) {
@@ -63,7 +94,8 @@ export default function profileDetailPage({ params }: { params: { id: string } }
     router.push(`/messages?chatId=${chat.id}`);
   };
 
-  //if (!profile) return <div>Loading...</div>;
+  // show a loading state while profile is being fetched
+  if (!profile) return <div>Loading...</div>;
 
   return (
     <Container className="py-4">
@@ -89,8 +121,8 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                   <div className="d-flex align-items-center gap-2">
                     <div style={{ minWidth: '80px' }}>
                       <ProgressBar
-                        now={profile.compatibilityScore}
-                        label={`${profile.compatibilityScore}%`}
+                        now={profile.compatibilityScore ?? 0}
+                        label={`${profile.compatibilityScore ?? 0}%`}
                       />
                     </div>
                   </div>
