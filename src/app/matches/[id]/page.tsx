@@ -63,7 +63,7 @@ export default function profileDetailPage({ params }: { params: { id: string } }
     router.push(`/messages?chatId=${chat.id}`);
   };
 
-  if (!profile) return <div>Loading...</div>;
+  //if (!profile) return <div>Loading...</div>;
 
   return (
     <Container className="py-4">
