@@ -88,6 +88,21 @@ export async function getProfileById(profileId: number) {
   });
 }
 
+/**
+ * Resolve an ID that may be either:
+ * - a Profile.id (in which case return the owning Profile.userId), or
+ * - already a User.id (return unchanged).
+ *
+ * Exported so callers (API routes) can normalize IDs before calling chat/message helpers.
+ */
+export async function resolveToUserId(maybeProfileOrUserId: number): Promise<number> {
+  const prof = await prisma.profile.findUnique({
+    where: { id: maybeProfileOrUserId },
+    select: { userId: true },
+  });
+  return prof ? prof.userId : maybeProfileOrUserId;
+}
+
 /* User helpers remain unchanged */
 export async function createUserProfile({
   username,
@@ -185,12 +200,13 @@ export async function updateUserProfile(userId: number, updates: {
 }
 
 /* Chat / message helpers remain unchanged */
-export async function createChat(userId1: number, userId2: number) {
+export async function createChat(maybeIdA: number, maybeIdB: number) {
+  const userId1 = await resolveToUserId(maybeIdA);
+  const userId2 = await resolveToUserId(maybeIdB);
+
   const user1 = await prisma.user.findUnique({ where: { id: userId1 } });
   const user2 = await prisma.user.findUnique({ where: { id: userId2 } });
-  if (!user1 || !user2) {
-    throw new Error('One or both users not found');
-  }
+  if (!user1 || !user2) throw new Error('One or both users not found');
 
   const existingChat = await prisma.chat.findFirst({
     where: {
@@ -201,35 +217,30 @@ export async function createChat(userId1: number, userId2: number) {
     },
     include: { members: true },
   });
-
-  if (existingChat) {
-    return existingChat;
-  }
+  if (existingChat) return existingChat;
 
   return prisma.chat.create({
-    data: {
-      members: {
-        connect: [{ id: userId1 }, { id: userId2 }],
-      },
-    },
+    data: { members: { connect: [{ id: userId1 }, { id: userId2 }] } },
     include: { members: true },
   });
 }
 
-export async function sendMessage(chatId: number, senderId: number, content: string) {
+export async function sendMessage(chatId: number, senderMaybeId: number, content: string) {
+  const senderUserId = await resolveToUserId(senderMaybeId);
   const chat = await prisma.chat.findUnique({
     where: { id: chatId },
     include: { members: true },
   });
-  if (!chat || !chat.members.some(u => u.id === senderId)) {
+  if (!chat || !chat.members.some(u => u.id === senderUserId)) {
     throw new Error('Not authorized');
   }
   return prisma.message.create({
-    data: { chatId, senderId, content },
+    data: { chatId, senderId: senderUserId, content },
   });
 }
 
-export async function getChatMessages(chatId: number, userId: number) {
+export async function getChatMessages(chatId: number, userMaybeId: number) {
+  const userId = await resolveToUserId(userMaybeId);
   const chat = await prisma.chat.findUnique({
     where: { id: chatId },
     include: { members: true },

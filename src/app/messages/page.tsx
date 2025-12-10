@@ -52,13 +52,48 @@ function sortChatsByRecentMessage(chats: Chat[]) {
 }
 
 function getImageSrc(profile: any) {
-  if (profile?.image) {
-    return profile.image; 
+  if (profile?.image) return profile.image;
+
+  const imgData = profile?.imageData;
+  if (!imgData) return '/uploads/default.jpg';
+
+  // already a data URL or base64 string
+  if (typeof imgData === 'string' && imgData.length > 0) return imgData;
+
+  // Node Buffer or serialized Buffer { type: 'Buffer', data: number[] }
+  if (typeof Buffer !== 'undefined') {
+    if (imgData instanceof Buffer) {
+      return `data:image/jpeg;base64,${Buffer.from(imgData).toString('base64')}`;
+    }
+    if (imgData?.type === 'Buffer' && Array.isArray(imgData.data)) {
+      return `data:image/jpeg;base64,${Buffer.from(imgData.data).toString('base64')}`;
+    }
   }
 
-  if (profile?.imageData) {
-    const buffer = profile.imageData as unknown as Uint8Array;
-    const base64 = btoa(String.fromCharCode(...buffer));
+  // normalize to Uint8Array for browsers / different shapes
+  let bytes: Uint8Array | null = null;
+  if (Array.isArray(imgData)) {
+    bytes = new Uint8Array(imgData as number[]);
+  } else if (imgData?.data && Array.isArray(imgData.data)) {
+    bytes = new Uint8Array(imgData.data as number[]);
+  } else if (imgData instanceof ArrayBuffer) {
+    bytes = new Uint8Array(imgData);
+  } else if (imgData instanceof Uint8Array) {
+    bytes = imgData;
+  }
+
+  if (bytes && bytes.length > 0) {
+    // Prefer Buffer conversion in Node, otherwise fallback to chunked btoa conversion
+    if (typeof Buffer !== 'undefined') {
+      return `data:image/jpeg;base64,${Buffer.from(bytes).toString('base64')}`;
+    }
+    const CHUNK = 0x8000;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      const sub = bytes.subarray(i, i + CHUNK);
+      binary += String.fromCharCode.apply(null, Array.from(sub));
+    }
+    const base64 = btoa(binary);
     return `data:image/jpeg;base64,${base64}`;
   }
 
