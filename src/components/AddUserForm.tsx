@@ -7,6 +7,7 @@ import swal from 'sweetalert';
 import { createUserProfile } from '@/lib/dbActions'; // <-- update import
 // import LoadingSpinner from '@/components/LoadingSpinner';
 import AddUserSchema from '@/lib/validationSchemas'; // <-- Create this schema
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
 const onSubmit = async (data: any) => {
   await createUserProfile(data); // <-- update function call
@@ -18,10 +19,14 @@ const AddUserForm: React.FC = () => {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(AddUserSchema),
   });
+
+  // Watch password field for real-time strength indicator
+  const watchedPassword = watch('password') || '';
 
   return (
     <Container className="py-3">
@@ -68,6 +73,13 @@ const AddUserForm: React.FC = () => {
                     className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                   />
                   <div className="invalid-feedback">{errors.password?.message}</div>
+
+                  {/* Password Strength Indicator */}
+                  {watchedPassword && (
+                    <div className="mt-3">
+                      <PasswordStrengthIndicator password={watchedPassword} />
+                    </div>
+                  )}
                 </Form.Group>
                 <Form.Group>
                   <Form.Label>Roommate Status</Form.Label>

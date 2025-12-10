@@ -66,47 +66,53 @@ export default function PasswordStrengthIndicator({
   }
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      {/* Strength Meter */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">Password Strength:</span>
+    <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Strength Meter with Segments */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
+          <span style={{ color: '#6b7280' }}>Password Strength:</span>
           <span
-            className="font-semibold"
-            style={{ color: strength.color }}
+            style={{ color: strength.color, fontWeight: 600 }}
           >
             {strength.label}
           </span>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className="h-full transition-all duration-300 ease-in-out rounded-full"
-            style={{
-              width: `${strength.percentage}%`,
-              backgroundColor: strength.color,
-            }}
-          />
+        {/* Segmented Meter Bar */}
+        <div style={{ display: 'flex', gap: '4px', width: '100%' }}>
+          {[0, 1, 2, 3, 4].map((segment) => (
+            <div
+              key={segment}
+              style={{
+                height: '8px',
+                flex: 1,
+                borderRadius: '9999px',
+                transition: 'all 0.3s ease-in-out',
+                backgroundColor: segment < Math.ceil(strength.score)
+                  ? strength.color
+                  : '#e5e7eb',
+              }}
+            />
+          ))}
         </div>
       </div>
 
       {/* Requirements Checklist */}
       {showRequirements && (
-        <div className="space-y-1.5">
-          <p className="text-sm font-medium text-gray-700">Password must contain:</p>
-          <ul className="space-y-1">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <p style={{ fontSize: '14px', fontWeight: 500, color: '#374151', margin: 0 }}>Password must contain:</p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {requirements.map((req) => (
               <li
                 key={req.id}
-                className="flex items-center gap-2 text-sm"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}
               >
                 {req.met ? (
-                  <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <CheckCircle style={{ width: '16px', height: '16px', color: '#16a34a', flexShrink: 0 }} />
                 ) : (
-                  <XCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <XCircle style={{ width: '16px', height: '16px', color: '#9ca3af', flexShrink: 0 }} />
                 )}
-                <span className={req.met ? 'text-green-700' : 'text-gray-600'}>
+                <span style={{ color: req.met ? '#15803d' : '#4b5563' }}>
                   {req.label}
                 </span>
               </li>
@@ -117,7 +123,15 @@ export default function PasswordStrengthIndicator({
 
       {/* Additional Security Tips */}
       {password.length >= 8 && !validationResult.isValid && (
-        <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+        <div style={{
+          marginTop: '8px',
+          padding: '8px',
+          backgroundColor: '#fefce8',
+          border: '1px solid #fde047',
+          borderRadius: '4px',
+          fontSize: '12px',
+          color: '#854d0e'
+        }}>
           <strong>Tip:</strong> Avoid common words, repeated characters, or sequential patterns for better security.
         </div>
       )}
