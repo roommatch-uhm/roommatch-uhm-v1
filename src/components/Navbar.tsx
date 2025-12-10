@@ -117,11 +117,18 @@ export default function Navbar() {
                 }
               >
                 {session && (
-                  <li>
-                    <Link href="/profile" className="dropdown-item" onClick={closeProfile}>
-                      My Profile
-                    </Link>
-                  </li>
+                  <>
+                    <li>
+                      <Link href="/profile" className="dropdown-item" onClick={closeProfile}>
+                        My Profile
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/auth/change-password" className="dropdown-item" onClick={closeProfile}>
+                        Change Password
+                      </Link>
+                    </li>
+                  </>
                 )}
 
                 {!session && (

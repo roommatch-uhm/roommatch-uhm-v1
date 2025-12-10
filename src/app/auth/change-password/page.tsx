@@ -8,6 +8,8 @@ import swal from 'sweetalert';
 import { Card, Col, Container, Button, Form, Row } from 'react-bootstrap';
 import { changeUserPassword } from '@/lib/dbActions';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
+import { validatePassword } from '@/lib/passwordValidator';
 
 type ChangePasswordForm = {
   oldpassword: string;
@@ -26,8 +28,19 @@ const ChangePassword = () => {
     oldpassword: Yup.string().required('Password is required'),
     password: Yup.string()
       .required('Password is required')
-      .min(6, 'Password must be at least 6 characters')
-      .max(40, 'Password must not exceed 40 characters'),
+      .test('password-strength', function (value) {
+        if (!value) return this.createError({ message: 'Password is required' });
+
+        const result = validatePassword(value);
+
+        if (!result.isValid) {
+          return this.createError({
+            message: result.errors[0] || 'Password does not meet security requirements',
+          });
+        }
+
+        return true;
+      }),
     confirmPassword: Yup.string()
       .required('Confirm Password is required')
       .oneOf([Yup.ref('password'), ''], 'Confirm Password does not match'),
@@ -37,10 +50,14 @@ const ChangePassword = () => {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ChangePasswordForm>({
     resolver: yupResolver(validationSchema),
   });
+
+  // Watch password field for real-time strength indicator
+  const watchedPassword = watch('password') || '';
 
   const onSubmit = async (data: ChangePasswordForm) => {
     if (!userId) {
@@ -83,6 +100,13 @@ const ChangePassword = () => {
                       className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                     />
                     <div className="invalid-feedback">{errors.password?.message}</div>
+
+                    {/* Password Strength Indicator */}
+                    {watchedPassword && (
+                      <div className="mt-3">
+                        <PasswordStrengthIndicator password={watchedPassword} />
+                      </div>
+                    )}
                   </Form.Group>
                   <Form.Group className="form-group">
                     <Form.Label>Confirm Password</Form.Label>
