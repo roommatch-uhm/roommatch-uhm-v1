@@ -27,18 +27,11 @@ const ProfileCard = ({ profile }: { profile?: Profile | null }) => {
     profile.sleep,
   ].filter(Boolean);
 
-  // Use imageData (bytes) for profile image, fallback to default avatar
+
   const getImageSrc = () => {
-    if (profile.imageData) {
-      // Convert Buffer/Uint8Array to base64 string
-      const base64 =
-        typeof Buffer !== 'undefined'
-          ? Buffer.from(profile.imageData).toString('base64')
-          : btoa(String.fromCharCode(...new Uint8Array(profile.imageData as any)));
-      return `data:image/jpeg;base64,${base64}`;
-    }
-    return '/uploads/default.jpg';
-  };
+  if (profile.image) return profile.image; 
+  return '/uploads/default.jpg';
+};
 
   const imgSrc = getImageSrc();
 

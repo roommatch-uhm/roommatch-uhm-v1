@@ -7,6 +7,7 @@ import Image from 'next/image';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useSearchParams } from 'next/navigation';
 
+
 interface Message {
   id: number;
   senderId?: number | string;
@@ -48,6 +49,20 @@ function sortChatsByRecentMessage(chats: Chat[]) {
     const timeB = lastB ? new Date(lastB.timestamp).getTime() : 0;
     return timeB - timeA;
   });
+}
+
+function getImageSrc(profile: any) {
+  if (profile?.image) {
+    return profile.image; 
+  }
+
+  if (profile?.imageData) {
+    const buffer = profile.imageData as unknown as Uint8Array;
+    const base64 = btoa(String.fromCharCode(...buffer));
+    return `data:image/jpeg;base64,${base64}`;
+  }
+
+  return '/uploads/default.jpg';
 }
 
 function MessagesPageContent() {
@@ -213,7 +228,7 @@ function MessagesPageContent() {
           .map((chat) => {
             const otherMember = getOtherMember(chat, userId);
             const profile = otherMember ? sidebarProfiles[otherMember.id] : null;
-            const imageToShow = profile?.image || otherMember?.image || '/uploads/default.jpg';
+            const imageToShow = getImageSrc(profile);
             console.log('Sidebar image for chat', chat.id, ':', imageToShow); // Log the image path
             return (
               <div
@@ -263,11 +278,7 @@ function MessagesPageContent() {
           {activeChat && (
             <div className="d-flex align-items-center bg-white border-bottom p-3 shadow-sm">
               <Image
-                src={
-                  otherProfile?.image ||
-                  getOtherMember(activeChat, userId)?.image ||
-                  '/uploads/default.jpg'
-                }
+                src={getImageSrc(otherProfile)}
                 alt={
                   otherProfile?.profileName ||
                   otherProfile?.name ||
