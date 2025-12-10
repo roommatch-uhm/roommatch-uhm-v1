@@ -154,3 +154,5 @@ NEXTAUTH_URL="http://localhost:3000"
 <pre>npm run dev</pre>
 
 <hr />
+
+[![ci-nextjs-application-template](https://github.com/roommatch-uhm/roommatch-uhm-v1/actions/workflows/ci.yml/badge.svg)](https://github.com/roommatch-uhm/roommatch-uhm-v1/actions/workflows/ci.yml)
