@@ -18,6 +18,8 @@ type Profile = {
     study: string;
     sleep: string;
     compatibilityScore?: number; // optional until we fetch the score
+    housingPreference?: string;   // added
+    locationPreference?: string;  // added
 };
 
 export default function profileDetailPage({ params }: { params: { id: string } }) {
