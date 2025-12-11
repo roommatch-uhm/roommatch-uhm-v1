@@ -146,25 +146,32 @@ function MessagesPageContent() {
     // eslint-disable-next-line
   }, [userId, chatIdParam]);
 
-  useEffect(() => {
-    if (!activeChat || !userId) return;
-    (async () => {
-      try {
-        const res = await fetch(`/api/chats/${activeChat.id}/messages`, {
-          headers: { 'x-user-id': String(userId) },
-        });
-        if (!res.ok) {
-          console.error('Failed to fetch messages', res.status, await res.text());
-          return;
-        }
-        const text = await res.text();
-        const messages = text ? JSON.parse(text) : [];
-        setActiveChat((chat) => (chat ? { ...chat, messages } : chat));
-      } catch (err) {
-        console.error('Error loading messages:', err);
+useEffect(() => {
+  if (!activeChat || !userId) return;
+  (async () => {
+    try {
+      const res = await fetch(`/api/chats/${activeChat.id}/messages`, {
+        headers: { 'x-user-id': String(userId) },
+      });
+      if (!res.ok) {
+        console.error('Failed to fetch messages', res.status, await res.text());
+        return;
       }
-    })();
-  }, [activeChat?.id, userId]);
+      const messages = await res.json();
+      setActiveChat((prev) =>
+        prev ? { ...prev, messages } : prev
+      );
+      setChats((prev) => {
+        const updated = prev.map((c) =>
+          c.id === activeChat.id ? { ...c, messages } : c
+        );
+        return sortChatsByRecentMessage(updated);
+      });
+    } catch (err) {
+      console.error('Error loading messages:', err);
+    }
+  })();
+}, [activeChat?.id, userId]);
 
   useEffect(() => {
     const otherMember = getOtherMember(activeChat, userId);
@@ -232,39 +239,45 @@ function MessagesPageContent() {
     if (chats.length > 0) fetchProfiles();
   }, [chats, userId]);
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeChat || !userId) return;
-    const content = newMessage.trim();
-    if (!content) return;
+ const sendMessage = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!activeChat || !userId) return;
 
-    try {
-      const res = await fetch(`/api/chats/${activeChat.id}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': String(userId),
-        },
-        body: JSON.stringify({ content }),
-      });
+  const content = newMessage.trim();
+  if (!content) return;
+  try {
+    const res = await fetch(`/api/chats/${activeChat.id}/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': String(userId),
+      },
+      body: JSON.stringify({ content }),
+    });
 
-      if (!res.ok) {
-        console.error('Failed to send message', await res.text());
-        return;
-      }
+    if (!res.ok) {
+      console.error('Failed to send message', await res.text());
+      return;
+    }
 
-      const createdMessage = await res.json();
-
-      setActiveChat((chat) =>
-        chat ? { ...chat, messages: [...(chat.messages || []), createdMessage] } : chat
+    const createdMessage = await res.json();
+    setActiveChat((prev) =>
+      prev ? { ...prev, messages: [...prev.messages, createdMessage] } : prev
+    );
+    setChats((prevChats) => {
+      const updated = prevChats.map((chat) =>
+        chat.id === activeChat.id
+          ? { ...chat, messages: [...chat.messages, createdMessage] }
+          : chat
       );
 
-      setNewMessage('');
-      fetchChats();
-    } catch (err) {
-      console.error('Error sending message:', err);
-    }
-  };
+      return sortChatsByRecentMessage(updated);
+    });
+    setNewMessage('');
+  } catch (err) {
+    console.error('Error sending message:', err);
+  }
+};
 
   if (status === 'loading') return <p className="text-center mt-5">Loading...</p>;
   if (!session) return <p className="text-center mt-5">Please sign in to view messages.</p>;
