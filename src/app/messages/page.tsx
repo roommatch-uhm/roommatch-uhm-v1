@@ -148,25 +148,47 @@ function MessagesPageContent() {
 
   useEffect(() => {
     if (!activeChat || !userId) return;
-    fetch(`/api/chats/${activeChat.id}/messages`, {
-      headers: { 'x-user-id': String(userId) },
-    })
-      .then(res => res.json())
-      .then(messages => {
-        setActiveChat(chat => chat ? { ...chat, messages } : chat);
-      });
+    (async () => {
+      try {
+        const res = await fetch(`/api/chats/${activeChat.id}/messages`, {
+          headers: { 'x-user-id': String(userId) },
+        });
+        if (!res.ok) {
+          console.error('Failed to fetch messages', res.status, await res.text());
+          return;
+        }
+        const text = await res.text();
+        const messages = text ? JSON.parse(text) : [];
+        setActiveChat((chat) => (chat ? { ...chat, messages } : chat));
+      } catch (err) {
+        console.error('Error loading messages:', err);
+      }
+    })();
   }, [activeChat?.id, userId]);
 
   useEffect(() => {
     const otherMember = getOtherMember(activeChat, userId);
     if (otherMember) {
-      fetch(`/api/profiles/${otherMember.id}`)
-        .then(res => res.json())
-        .then(profile => {
-          console.log('Fetched profile for chat header:', profile);
+      (async () => {
+        const id = otherMember.id;
+        try {
+          // Try lookup by profile.userId first
+          let res = await fetch(`/api/profiles?userId=${id}`);
+          if (!res.ok) {
+            // fallback to profile.id lookup
+            res = await fetch(`/api/profiles/${id}`);
+          }
+          if (!res.ok) {
+            setOtherProfile(null);
+            return;
+          }
+          const profile = await res.json();
+          console.log('Fetched profile for chat header (resolved):', profile);
           setOtherProfile(profile);
-        })
-        .catch(() => setOtherProfile(null));
+        } catch {
+          setOtherProfile(null);
+        }
+      })();
     } else {
       setOtherProfile(null);
     }
@@ -174,22 +196,37 @@ function MessagesPageContent() {
 
   useEffect(() => {
     const fetchProfiles = async () => {
-      const profiles: Record<number, { name: string; image?: string; profileName?: string }> = {};
+      const profiles: Record<number, any> = {};
       for (const chat of chats) {
         const otherMember = getOtherMember(chat, userId);
-        if (otherMember && !profiles[otherMember.id]) {
-          try {
-            const res = await fetch(`/api/profiles/${otherMember.id}`);
-            if (res.ok) {
-              const profile = await res.json();
-              console.log('Fetched profile for sidebar:', profile);
-              profiles[otherMember.id] = profile;
-            }
-          } catch {
-            profiles[otherMember.id] = { name: otherMember.firstName || 'User' };
+        if (!otherMember) continue;
+        if (profiles[otherMember.id]) continue;
+
+        try {
+          const id = otherMember.id;
+          // prefer lookup by profile.userId first (handles chats that include user ids)
+          let res = await fetch(`/api/profiles?userId=${id}`);
+          if (!res.ok) {
+            // fallback to profile.id lookup
+            res = await fetch(`/api/profiles/${id}`);
           }
+          if (res.ok) {
+            const profile = await res.json();
+            // store the returned profile keyed by the original member id from the chat
+            profiles[Number(otherMember.id)] = profile;
+            // also store by canonical keys so later lookups succeed whether the chat member id is a userId or profileId
+            if (profile?.userId) profiles[Number(profile.userId)] = profile;
+            if (profile?.id) profiles[Number(profile.id)] = profile;
+            continue;
+          }
+        } catch (err) {
+          // ignore and fall through to placeholder
         }
+
+        // fallback placeholder if fetch failed
+        profiles[Number(otherMember.id)] = { name: otherMember.firstName || 'User' };
       }
+
       setSidebarProfiles(profiles);
     };
     if (chats.length > 0) fetchProfiles();
@@ -250,19 +287,19 @@ function MessagesPageContent() {
           {chats
           .filter((chat) => {
             const otherMember = getOtherMember(chat, userId);
-            const profile = otherMember ? sidebarProfiles[otherMember.id] : null;
-            const name = 
-              profile?.profileName ||
-              profile?.name ||
-              otherMember?.profileName ||
-              otherMember?.firstName ||
-              '';
+            const memberId = otherMember?.id;
+            // resolve profile from sidebarProfiles using numeric key (handles both profile.id and profile.userId)
+            const prof = memberId ? sidebarProfiles[Number(memberId)] : null;
+            const name = prof?.profileName ?? prof?.name ?? otherMember?.profileName ?? otherMember?.firstName ?? '';
 
             return name.toLowerCase().includes(searchTerm.toLowerCase());
           }) 
           .map((chat) => {
             const otherMember = getOtherMember(chat, userId);
-            const profile = otherMember ? sidebarProfiles[otherMember.id] : null;
+            const memberId = otherMember?.id;
+            const profile = memberId ? sidebarProfiles[Number(memberId)] : null;
+            const displayName =
+              profile?.profileName ?? profile?.name ?? otherMember?.profileName ?? otherMember?.firstName ?? 'User';
             const imageToShow = getImageSrc(profile);
             console.log('Sidebar image for chat', chat.id, ':', imageToShow); // Log the image path
             return (
@@ -283,25 +320,13 @@ function MessagesPageContent() {
               >
                 <Image
                   src={imageToShow}
-                  alt={
-                    profile?.profileName ||
-                    profile?.name ||
-                    otherMember?.profileName ||
-                    otherMember?.firstName ||
-                    'User'
-                  }
+                  alt={displayName}
                   width={45}
                   height={45}
                   className="rounded-circle me-3 object-fit-cover"
                 />
                 <div>
-                  <strong>
-                    {profile?.profileName ||
-                      profile?.name ||
-                      otherMember?.profileName ||
-                      otherMember?.firstName ||
-                      'User'}
-                  </strong>
+                  <strong>{displayName}</strong>
                 </div>
               </div>
             );

@@ -83,11 +83,15 @@ export default function profileDetailPage({ params }: { params: { id: string } }
       alert('You must be signed in to send messages.');
       return;
     }
-    // Create a new chat (or get existing one)
+    // Create a new chat (or get existing one). Prefer profile.userId, fallback to profile.id.
+    const targetUserId = profile.userId ?? profile.id;
     const res = await fetch('/api/chats', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId1: myUserId, userId2: profile.userId }),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': String(myUserId), // ensure server knows the signed-in user
+      },
+      body: JSON.stringify({ userId1: myUserId, userId2: targetUserId }),
     });
     const chat = await res.json();
     // Redirect to messages page with the new chat's ID

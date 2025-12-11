@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { Profile } from '@prisma/client';
@@ -10,18 +9,26 @@ interface RouteParams {
 }
 
 export async function GET(req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
-  const profile: Profile | null = await prisma.profile.findUnique({
-    where: { id: Number(params.id) },
-  });
-  // Log image info using imageAddedAt and imageData size
-  console.log(
-    'API returning profile:',
-    profile?.name,
-    'imageAddedAt:',
-    profile?.imageAddedAt,
-    'imageData bytes:',
-    profile?.imageData ? (profile.imageData as Buffer).length : 0
-  );
+  const url = new URL(req.url);
+  const userIdQuery = url.searchParams.get('userId');
+
+  console.log('Incoming request to /api/profiles/:id');
+  console.log('  raw path param id:', params.id);
+  console.log('  userId query param:', userIdQuery);
+
+  const profile: Profile | null = userIdQuery
+    ? await prisma.profile.findUnique({ where: { userId: Number(userIdQuery) } })
+    : await prisma.profile.findUnique({ where: { id: Number(params.id) } });
+
+  // Additional terminal debug: show which record was returned (or none)
+  if (profile) {
+    console.log(
+      `Resolved profile -> profile.id: ${profile.id}, profile.userId: ${profile.userId}, profile.name: ${profile.name}`
+    );
+  } else {
+    console.log('No profile found for provided identifier(s).');
+  }
+
   if (!profile) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(profile);
 }
