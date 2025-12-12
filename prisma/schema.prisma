@@ -70,6 +70,7 @@ model Profile {
   social       String
   study        String
   sleep        String
+  dealbreakers String[] @default([])
 }
 
 model Meeting {

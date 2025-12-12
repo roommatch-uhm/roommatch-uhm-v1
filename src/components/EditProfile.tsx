@@ -9,6 +9,7 @@ import swal from 'sweetalert';
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 import { EditProfileSchema } from '@/lib/validationSchemas';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import DealBreakers from '@/components/DealBreakers';
 import type { Profile } from '@prisma/client';
 
 type FormValues = {
@@ -19,6 +20,7 @@ type FormValues = {
   social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
   study: 'Cramming' | 'Regular' | 'None';
   sleep: 'Early_Bird' | 'Night_Owl' | 'Flexible';
+  dealbreakers?: (string | undefined)[] | null;
 };
 
 export default function EditProfileForm({ profile }: { profile: Profile }) {
@@ -30,6 +32,9 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       ? `/api/profiles/${profile.id}/image`
       : null
   );
+  const [dealbreakers, setDealbreakers] = useState<string[]>(
+    (profile.dealbreakers as string[]) || []
+  );
 
   const {
     register,
@@ -39,7 +44,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
     watch,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: yupResolver(EditProfileSchema),
+    resolver: yupResolver(EditProfileSchema) as any,
     defaultValues: {
       name: profile?.name ?? '',
       description: profile?.description ?? '',
@@ -61,6 +66,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       study: (profile?.study as any) ?? 'Regular',
       sleep: (profile?.sleep as any) ?? 'Flexible',
     });
+    setDealbreakers((profile.dealbreakers as string[]) || []);
   }, [profile, reset]);
 
   if (status === 'loading') return <LoadingSpinner />;
@@ -90,6 +96,7 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
       formData.append('study', data.study);
       formData.append('sleep', data.sleep);
       formData.append('userId', String(profile.userId));
+      formData.append('dealbreakers', JSON.stringify(dealbreakers));
 
       // Append file if selected
       if (fileInput.current?.files?.[0]) {
@@ -257,6 +264,12 @@ export default function EditProfileForm({ profile }: { profile: Profile }) {
                         <option value="Flexible">Flexible</option>
                       </select>
                     </Form.Group>
+
+                    {/* Dealbreakers */}
+                    <DealBreakers
+                      selectedDealbreakers={dealbreakers}
+                      onChange={setDealbreakers}
+                    />
                   </Col>
 
                   {/* Image */}

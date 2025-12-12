@@ -49,6 +49,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const study = formData.get('study') as string;
   const sleep = formData.get('sleep') as string;
   const userId = Number(formData.get('userId'));
+  const dealbreakersStr = formData.get('dealbreakers') as string;
+  const dealbreakers = dealbreakersStr ? JSON.parse(dealbreakersStr) : [];
 
   const data: any = {
     user: { connect: { id: userId } },
@@ -59,6 +61,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     social,
     study,
     sleep,
+    dealbreakers,
   };
   if (imageBuffer) {
     data.imageData = imageBuffer;

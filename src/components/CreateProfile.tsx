@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { createProfile } from '@/lib/dbActions';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { CreateProfileSchema } from '@/lib/validationSchemas';
+import DealBreakers from '@/components/DealBreakers';
 import React, { useRef, useState } from 'react';
 
 type FormValues = {
@@ -28,6 +29,7 @@ type FormValues = {
   social: 'Introvert' | 'Ambivert' | 'Extrovert' | 'Unsure';
   study: 'Cramming' | 'Regular' | 'None';
   sleep: 'Early_Bird' | 'Night_Owl' | 'Flexible';
+  dealbreakers?: (string | undefined)[] | null;
 };
 
 export default function CreateUserProfile() {
@@ -40,13 +42,14 @@ export default function CreateUserProfile() {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: yupResolver(CreateProfileSchema),
-    defaultValues: { budget: 0 },
+    resolver: yupResolver(CreateProfileSchema) as any,
+    defaultValues: { budget: 0, dealbreakers: [] },
   });
 
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [dealbreakers, setDealbreakers] = useState<string[]>([]);
 
   if (status === 'loading') return <LoadingSpinner />;
   if (status === 'unauthenticated') {
@@ -89,6 +92,7 @@ export default function CreateUserProfile() {
     formData.append('study', data.study);
     formData.append('sleep', data.sleep);
     formData.append('userId', userIdStr);
+    formData.append('dealbreakers', JSON.stringify(dealbreakers));
 
     if (fileInput.current?.files?.[0]) {
       formData.append('image', fileInput.current.files[0]);
@@ -237,6 +241,12 @@ export default function CreateUserProfile() {
                         <option value="Flexible">Flexible</option>
                       </select>
                     </Form.Group>
+
+                    {/* Dealbreakers */}
+                    <DealBreakers
+                      selectedDealbreakers={dealbreakers}
+                      onChange={setDealbreakers}
+                    />
                   </Col>
 
                   {/* Image */}

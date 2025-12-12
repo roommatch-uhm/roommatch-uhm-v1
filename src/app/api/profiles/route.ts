@@ -39,6 +39,8 @@ export async function POST(req: NextRequest) {
   const study = formData.get('study') as string;
   const sleep = formData.get('sleep') as string;
   const userId = Number(formData.get('userId'));
+  const dealbreakersStr = formData.get('dealbreakers') as string;
+  const dealbreakers = dealbreakersStr ? JSON.parse(dealbreakersStr) : [];
 
   await prisma.profile.create({
     data: {
@@ -50,6 +52,7 @@ export async function POST(req: NextRequest) {
       social,
       study,
       sleep,
+      dealbreakers,
       imageData: imageBuffer, // <-- Now a Buffer!
     },
   });

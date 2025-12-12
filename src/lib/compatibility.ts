@@ -7,7 +7,7 @@ function getWeight(key: string) {
 }
 
 type ProfileAnswers = {
-  [key: string]: string | number | null | undefined;
+  [key: string]: string | number | null | undefined | string[];
 };
 
 export function calculateCompatibility(
@@ -45,8 +45,36 @@ export function pickAnswersFromProfile(profile: any) {
     sleep: profile?.sleep ?? null,
     housingPreference: profile?.housingPreference ?? null,
     locationPreference: profile?.locationPreference ?? null,
+    dealbreakers: profile?.dealbreakers ?? [],
     // add any other profile columns you will use for matching here
-  } as Record<string, string | number | null>;
+  } as Record<string, string | number | null | string[]>;
+}
+
+/**
+ * Check if a match violates any dealbreakers.
+ * Returns true if the match should be blocked (dealbreaker violated).
+ */
+export function hasDealbreaker(userProfile: any, otherProfile: any): boolean {
+  const userDealbreakers = userProfile?.dealbreakers || [];
+  const otherDealbreakers = otherProfile?.dealbreakers || [];
+
+  // Check if other person's attributes match user's dealbreakers
+  for (const dealbreaker of userDealbreakers) {
+    const [attribute, value] = dealbreaker.split(':');
+    if (otherProfile[attribute] === value) {
+      return true; // This match violates user's dealbreaker
+    }
+  }
+
+  // Check if user's attributes match other person's dealbreakers
+  for (const dealbreaker of otherDealbreakers) {
+    const [attribute, value] = dealbreaker.split(':');
+    if (userProfile[attribute] === value) {
+      return true; // This match violates other person's dealbreaker
+    }
+  }
+
+  return false;
 }
 
 export type MatchResult = {
@@ -59,18 +87,25 @@ export type MatchResult = {
 /**
  * Given a user's profile row and an array of other profile rows,
  * returns MatchResult[] sorted descending by score.
+ * Profiles that violate dealbreakers are filtered out.
  */
 export function scoreProfilesForUser(userProfile: any, otherProfiles: any[]): MatchResult[] {
   const me = pickAnswersFromProfile(userProfile);
-  const results: MatchResult[] = otherProfiles.map((p: any) => {
-    const other = pickAnswersFromProfile(p);
-    return {
-      profileId: p.id,
-      userId: p.userId,
-      name: p.name ?? null,
-      score: calculateCompatibility(me, other),
-    };
-  });
+  const results: MatchResult[] = otherProfiles
+    .filter((p: any) => {
+      const other = pickAnswersFromProfile(p);
+      // Filter out profiles that violate dealbreakers
+      return !hasDealbreaker(me, other);
+    })
+    .map((p: any) => {
+      const other = pickAnswersFromProfile(p);
+      return {
+        profileId: p.id,
+        userId: p.userId,
+        name: p.name ?? null,
+        score: calculateCompatibility(me, other),
+      };
+    });
   results.sort((a, b) => b.score - a.score);
   return results;
 }

@@ -46,6 +46,10 @@ export const CreateProfileSchema = Yup.object({
   sleep: Yup.string()
     .oneOf(['Early_Bird', 'Night_Owl', 'Flexible'])
     .required('Please select a sleep level'),
+  dealbreakers: Yup.array()
+    .of(Yup.string())
+    .default([])
+    .nullable(),
 });
 
 // reuse same rules for editing
