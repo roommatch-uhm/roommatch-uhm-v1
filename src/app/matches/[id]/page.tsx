@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 type Profile = {
     id: number;
     userId: number;
-    image: string | null;
+    imageData: Uint8Array | null;
     name: string;
     description: string;
     budget: number;
@@ -98,6 +98,40 @@ export default function profileDetailPage({ params }: { params: { id: string } }
     router.push(`/messages?chatId=${chat.id}`);
   };
 
+  const getImageSrc = (profile: any) => {
+    if (!profile || !profile.imageData) {
+      return '/uploads/default.jpg';
+    }
+
+    let byteArray: Uint8Array | null = null;
+
+    // Handle { type: 'Buffer', data: [...] }
+    if (profile.imageData.data && Array.isArray(profile.imageData.data)) {
+      byteArray = new Uint8Array(profile.imageData.data);
+    } else if (
+      typeof profile.imageData === 'object' &&
+      'type' in profile.imageData &&
+      profile.imageData.type === 'Buffer' &&
+      Array.isArray(profile.imageData.data)
+    ) {
+      byteArray = new Uint8Array(profile.imageData.data);
+    } else if (profile.imageData instanceof Uint8Array) {
+      byteArray = profile.imageData;
+    }
+
+    if (byteArray) {
+      const base64 =
+        typeof Buffer !== 'undefined'
+          ? Buffer.from(byteArray).toString('base64')
+          : btoa(String.fromCharCode(...byteArray));
+      return `data:image/jpeg;base64,${base64}`;
+    }
+
+    return '/uploads/default.jpg';
+  };
+
+  const imgSrc = profile ? getImageSrc(profile) : '/uploads/default.jpg';
+
   if (!profile) {
     return <div>Loading...</div>;
   }
@@ -144,7 +178,7 @@ export default function profileDetailPage({ params }: { params: { id: string } }
                     </ListGroup.Item>
                   </ListGroup>
                   <Image
-                      src={profile.image || '/uploads/default.jpg'}
+                      src={imgSrc}
                       rounded
                       style={{
                          width: '100%',
